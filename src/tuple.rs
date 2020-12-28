@@ -33,10 +33,7 @@ impl Tuple {
         Self::new(self.x / m, self.y / m, self.z / m, self.w / m)
     }
     pub fn dot(&self, other: &Self) -> f64 {
-        self.x * other.x
-        + self.y * other.y
-        + self.z * other.z
-        + self.w * other.w
+        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
     }
     pub fn cross(&self, other: &Self) -> Self {
         Self::vector(
@@ -48,10 +45,10 @@ impl Tuple {
 
 impl PartialEq for Tuple {
     fn eq(&self, other: &Self) -> bool {
-        approx_eq(self.x, other.x)
-        && approx_eq(self.y, other.y)
-        && approx_eq(self.z, other.z)
-        && self.w == other.w
+        approx_eq(self.x, other.x) &&
+        approx_eq(self.y, other.y) &&
+        approx_eq(self.z, other.z) &&
+        self.w == other.w
     }
 }
 
@@ -82,16 +79,16 @@ impl Neg for Tuple {
 impl Mul<f64> for Tuple {
     type Output = Tuple;
 
-    fn mul(self, other: f64) -> Self {
-        Tuple::new(self.x * other, self.y * other, self.z * other, self.w * other)
+    fn mul(self, scalar: f64) -> Self {
+        Tuple::new(self.x * scalar, self.y * scalar, self.z * scalar, self.w * scalar)
     }
 }
 
 impl Div<f64> for Tuple {
     type Output = Tuple;
 
-    fn div(self, other: f64) -> Self {
-        Tuple::new(self.x / other, self.y / other, self.z / other, self.w / other)
+    fn div(self, scalar: f64) -> Self {
+        Tuple::new(self.x / scalar, self.y / scalar, self.z / scalar, self.w / scalar)
     }
 }
 
