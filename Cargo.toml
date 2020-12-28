@@ -1,0 +1,5 @@
+[package]
+name = "rust-tracer"
+version = "0.1.0"
+authors = ["geovani"]
+edition = "2018"
