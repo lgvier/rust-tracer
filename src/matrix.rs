@@ -1,3 +1,4 @@
+use super::tuple::*;
 use crate::utils::approx_eq;
 use core::ops::{Index, Mul};
 
@@ -11,7 +12,7 @@ pub const IDENTITY_MATRIX: Matrix = Matrix {
     size: 4,
 };
 
-const EMPTY_ROW: [f64; 4] = [0., 0., 0., 0.];
+const EMPTY_ROW: [f64; 4] = [0.; 4];
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix {
@@ -54,6 +55,33 @@ impl Matrix {
             size: 2,
         }
     }
+    pub fn transpose(&self) -> Self {
+        let mut m = Matrix::empty(self.size);
+        for r in 0..self.size {
+            for c in 0..self.size {
+                m.data[c][r] = self.data[r][c];
+            }
+        }
+        m
+    }
+    pub fn determinant(&self) -> f64 {
+        if self.size > 2 {
+            panic!("not supported yet");
+        }
+        self[0][0] * self[1][1] - self[0][1] * self[1][0]
+    }
+    pub fn submatrix(&self, remove_row: usize, remove_col: usize) -> Self {
+        let size = self.size - 1;
+        let mut m = Matrix::empty(size);
+        for r in 0..size {
+            for c in 0..size {
+                let src_row = if r < remove_row { r } else { r + 1 };
+                let src_col = if c < remove_col { c } else { c + 1 };
+                m.data[r][c] = self.data[src_row][src_col];
+            }
+        }
+        m
+    }
 }
 
 impl Index<usize> for Matrix {
@@ -72,6 +100,12 @@ impl PartialEq for Matrix {
     }
 }
 
+impl Default for Matrix {
+    fn default() -> Self {
+        IDENTITY_MATRIX
+    }
+}
+
 impl Mul<Matrix> for Matrix {
     type Output = Matrix;
 
@@ -84,6 +118,20 @@ impl Mul<Matrix> for Matrix {
             }
         }
         m
+    }
+}
+
+impl Mul<Tuple> for Matrix {
+    type Output = Tuple;
+
+    fn mul(self, other: Tuple) -> Tuple {
+        let dot = |i| {
+            self[i][0] * other.x
+                + self[i][1] * other.y
+                + self[i][2] * other.z
+                + self[i][3] * other.w
+        };
+        Tuple::new(dot(0), dot(1), dot(2), dot(3))
     }
 }
 
@@ -156,5 +204,60 @@ mod tests {
             [16., 26., 46., 42.],
         );
         assert_eq!(expected, m * m2);
+    }
+
+    #[test]
+    fn matrix_tuple_mul() {
+        let m = Matrix::new(
+            [1., 2., 3., 4.],
+            [2., 4., 4., 2.],
+            [8., 6., 4., 1.],
+            [0., 0., 0., 1.],
+        );
+        let t = Tuple::new(1., 2., 3., 1.);
+        assert_eq!(Tuple::new(18., 24., 33., 1.), m * t);
+    }
+
+    #[test]
+    fn matrix_identity() {
+        let m = Matrix::new(
+            [1., 2., 3., 4.],
+            [2., 4., 4., 2.],
+            [8., 6., 4., 1.],
+            [0., 0., 0., 1.],
+        );
+        assert_eq!(m, m * IDENTITY_MATRIX);
+    }
+
+    #[test]
+    fn matrix_transpose() {
+        let m = Matrix::new(
+            [0., 9., 3., 0.],
+            [9., 8., 0., 8.],
+            [1., 8., 5., 3.],
+            [0., 0., 5., 8.],
+        );
+        let expected = Matrix::new(
+            [0., 9., 1., 0.],
+            [9., 8., 8., 0.],
+            [3., 0., 5., 5.],
+            [0., 8., 3., 8.],
+        );
+        assert_eq!(expected, m.transpose());
+
+        assert_eq!(IDENTITY_MATRIX, IDENTITY_MATRIX.transpose());
+    }
+
+    #[test]
+    fn matrix_determinant() {
+        let m = Matrix::new2([1., 5.], [-3., 2.]);
+        assert_eq!(17., m.determinant());
+    }
+
+    #[test]
+    fn matrix_submatrix() {
+        let m = Matrix::new3([1., 5., 0.], [-3., 2., 7.], [0., 6., -3.]);
+        let expected = Matrix::new2([-3., 2.], [0., 6.]);
+        assert_eq!(expected, m.submatrix(0, 2));
     }
 }
