@@ -67,9 +67,8 @@ impl Index<usize> for Matrix {
 impl PartialEq for Matrix {
     fn eq(&self, other: &Self) -> bool {
         self.size == other.size
-            && (0..self.size).all(|row| {
-                (0..self.size).all(|col| approx_eq(self.data[row][col], other.data[row][col]))
-            })
+            && (0..self.size)
+                .all(|r| (0..self.size).all(|c| approx_eq(self.data[r][c], other.data[r][c])))
     }
 }
 
@@ -134,5 +133,28 @@ mod tests {
         );
         assert_eq!(m, m2);
         assert_ne!(m, m3);
+    }
+
+    #[test]
+    fn matrix_mul() {
+        let m = Matrix::new(
+            [1., 2., 3., 4.],
+            [5., 6., 7., 8.],
+            [9., 8., 7., 6.],
+            [5., 4., 3., 2.],
+        );
+        let m2 = Matrix::new(
+            [-2., 1., 2., 3.],
+            [3., 2., 1., -1.],
+            [4., 3., 6., 5.],
+            [1., 2., 7., 8.],
+        );
+        let expected = Matrix::new(
+            [20., 22., 50., 48.],
+            [44., 54., 114., 108.],
+            [40., 58., 110., 102.],
+            [16., 26., 46., 42.],
+        );
+        assert_eq!(expected, m * m2);
     }
 }
