@@ -1,16 +1,30 @@
 use crate::utils::approx_eq;
 use core::ops::{Add, Sub, Mul};
 
+pub const BLACK: Color = Color { r: 0., g: 0., b: 0. };
+pub const RED: Color = Color { r: 1., g: 0., b: 0. };
+pub const GREEN: Color = Color { r: 0., g: 1., b: 0. };
+pub const BLUE: Color = Color { r: 0., g: 0., b: 1. };
+
 #[derive(Debug, Copy, Clone)]
 pub struct Color {
-    r: f64,
-    g: f64,
-    b: f64,
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
 }
 
 impl Color {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         Self {r, g, b}
+    }
+    fn to_u8(c: f64) -> u8 {
+        const MAX: f64 = 255.;
+        (c * MAX).min(MAX).max(0.) as u8
+    }
+    pub fn write_as_u8_rgb(&self, buff: &mut Vec<u8>, index: usize) {
+        buff[index] = Self::to_u8(self.r);
+        buff[index + 1] = Self::to_u8(self.g);
+        buff[index + 2] = Self::to_u8(self.b);
     }
 }
 

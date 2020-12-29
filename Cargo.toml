@@ -3,3 +3,11 @@ name = "rust-tracer"
 version = "0.1.0"
 authors = ["geovani"]
 edition = "2018"
+
+[lib]
+name = "rust_tracer"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+png = "0.16.8"
