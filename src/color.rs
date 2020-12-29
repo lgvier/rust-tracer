@@ -1,10 +1,26 @@
 use crate::utils::approx_eq;
-use core::ops::{Add, Sub, Mul};
+use core::ops::{Add, Mul, Sub};
 
-pub const BLACK: Color = Color { r: 0., g: 0., b: 0. };
-pub const RED: Color = Color { r: 1., g: 0., b: 0. };
-pub const GREEN: Color = Color { r: 0., g: 1., b: 0. };
-pub const BLUE: Color = Color { r: 0., g: 0., b: 1. };
+pub const BLACK: Color = Color {
+    r: 0.,
+    g: 0.,
+    b: 0.,
+};
+pub const RED: Color = Color {
+    r: 1.,
+    g: 0.,
+    b: 0.,
+};
+pub const GREEN: Color = Color {
+    r: 0.,
+    g: 1.,
+    b: 0.,
+};
+pub const BLUE: Color = Color {
+    r: 0.,
+    g: 0.,
+    b: 1.,
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Color {
@@ -15,7 +31,7 @@ pub struct Color {
 
 impl Color {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Self {r, g, b}
+        Self { r, g, b }
     }
     fn to_u8(c: f64) -> u8 {
         const MAX: f64 = 255.;
@@ -30,9 +46,7 @@ impl Color {
 
 impl PartialEq for Color {
     fn eq(&self, other: &Self) -> bool {
-        approx_eq(self.r, other.r) &&
-        approx_eq(self.g, other.g) && 
-        approx_eq(self.b, other.b)
+        approx_eq(self.r, other.r) && approx_eq(self.g, other.g) && approx_eq(self.b, other.b)
     }
 }
 
@@ -85,7 +99,6 @@ mod tests {
         let c2 = Color::new(0.9, 0.6, 0.75);
         assert_eq!(c, c2);
     }
-    
     #[test]
     fn color_ne() {
         let c = Color::new(0.9, 0.6, 0.75);
@@ -108,12 +121,10 @@ mod tests {
         let result = c - c2;
         assert_eq!(Color::new(0.2, 0.5, 0.5), result);
     }
-    
     #[test]
     fn color_mul() {
         let c = Color::new(0.2, 0.3, 0.4);
         assert_eq!(Color::new(0.4, 0.6, 0.8), c * 2.);
         assert_eq!(Color::new(0.1, 0.3, 0.04), c * Color::new(0.5, 1., 0.1));
     }
-    
 }

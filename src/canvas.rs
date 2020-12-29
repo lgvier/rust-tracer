@@ -1,5 +1,5 @@
-use std::io::{Result, BufWriter};
 use std::fs::File;
+use std::io::{BufWriter, Result};
 
 use super::color::*;
 
@@ -7,14 +7,18 @@ use super::color::*;
 pub struct Canvas {
     pub width: usize,
     pub height: usize,
-    canvas: Vec<Vec<Color>>
+    canvas: Vec<Vec<Color>>,
 }
 
 impl Canvas {
     pub fn new(width: usize, height: usize) -> Self {
         let black_row = vec![BLACK; width];
         let canvas = vec![black_row; height];
-        Self {width, height, canvas}
+        Self {
+            width,
+            height,
+            canvas,
+        }
     }
 
     pub fn pixel_at(&self, x: usize, y: usize) -> Color {

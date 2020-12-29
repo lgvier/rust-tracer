@@ -1,4 +1,5 @@
-pub mod utils;
-pub mod tuple;
-pub mod color;
 pub mod canvas;
+pub mod color;
+pub mod matrix;
+pub mod tuple;
+pub mod utils;

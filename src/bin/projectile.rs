@@ -1,15 +1,15 @@
+use rust_tracer::canvas::Canvas;
 use rust_tracer::color::RED;
 use rust_tracer::tuple::Tuple;
-use rust_tracer::canvas::Canvas;
 
 #[derive(Debug)]
 struct Projectile {
     pub position: Tuple,
-    pub velocity: Tuple
+    pub velocity: Tuple,
 }
 struct Environment {
     pub gravity: Tuple,
-    pub wind: Tuple
+    pub wind: Tuple,
 }
 
 fn tick(e: &Environment, p: &Projectile) -> Projectile {
@@ -18,13 +18,13 @@ fn tick(e: &Environment, p: &Projectile) -> Projectile {
     Projectile { position, velocity }
 }
 fn main() -> std::io::Result<()> {
-    let mut p = Projectile { 
+    let mut p = Projectile {
         position: Tuple::point(0., 1., 0.),
-        velocity: Tuple::vector(1., 1.8, 0.).normalize() * 9.4
+        velocity: Tuple::vector(1., 1.8, 0.).normalize() * 9.4,
     };
     let e = Environment {
         gravity: Tuple::vector(0., -0.1, 0.),
-        wind: Tuple::vector(0.01, 0., 0.)
+        wind: Tuple::vector(0.01, 0., 0.),
     };
     let mut c = Canvas::new(900, 550);
 
@@ -33,9 +33,7 @@ fn main() -> std::io::Result<()> {
         let y = ((c.height as f64 - 1. - pos.y) as usize).min(c.height - 1);
         c.write_pixel(x, y, RED);
     };
-    
     write_pixel(&p.position);
-
     let mut count = 0;
     while p.position.y > 0. {
         // println!("p: {:#?}", p);

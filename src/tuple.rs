@@ -1,5 +1,5 @@
 use crate::utils::approx_eq;
-use core::ops::{Add, Sub, Neg, Mul, Div};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tuple {
@@ -11,7 +11,7 @@ pub struct Tuple {
 
 impl Tuple {
     pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
-        Self {x, y, z, w}
+        Self { x, y, z, w }
     }
     pub fn point(x: f64, y: f64, z: f64) -> Self {
         Self::new(x, y, z, 1.)
@@ -39,16 +39,17 @@ impl Tuple {
         Self::vector(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x)
+            self.x * other.y - self.y * other.x,
+        )
     }
 }
 
 impl PartialEq for Tuple {
     fn eq(&self, other: &Self) -> bool {
-        approx_eq(self.x, other.x) &&
-        approx_eq(self.y, other.y) &&
-        approx_eq(self.z, other.z) &&
-        self.w == other.w
+        approx_eq(self.x, other.x)
+            && approx_eq(self.y, other.y)
+            && approx_eq(self.z, other.z)
+            && self.w == other.w
     }
 }
 
@@ -56,7 +57,12 @@ impl Add<Tuple> for Tuple {
     type Output = Tuple;
 
     fn add(self, other: Self) -> Self {
-        Tuple::new(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
+        Tuple::new(
+            self.x + other.x,
+            self.y + other.y,
+            self.z + other.z,
+            self.w + other.w,
+        )
     }
 }
 
@@ -64,7 +70,12 @@ impl Sub<Tuple> for Tuple {
     type Output = Tuple;
 
     fn sub(self, other: Self) -> Self {
-        Tuple::new(self.x - other.x, self.y - other.y, self.z - other.z, self.w - other.w)
+        Tuple::new(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z,
+            self.w - other.w,
+        )
     }
 }
 
@@ -80,7 +91,12 @@ impl Mul<f64> for Tuple {
     type Output = Tuple;
 
     fn mul(self, scalar: f64) -> Self {
-        Tuple::new(self.x * scalar, self.y * scalar, self.z * scalar, self.w * scalar)
+        Tuple::new(
+            self.x * scalar,
+            self.y * scalar,
+            self.z * scalar,
+            self.w * scalar,
+        )
     }
 }
 
@@ -88,7 +104,12 @@ impl Div<f64> for Tuple {
     type Output = Tuple;
 
     fn div(self, scalar: f64) -> Self {
-        Tuple::new(self.x / scalar, self.y / scalar, self.z / scalar, self.w / scalar)
+        Tuple::new(
+            self.x / scalar,
+            self.y / scalar,
+            self.z / scalar,
+            self.w / scalar,
+        )
     }
 }
 
@@ -145,7 +166,6 @@ mod tests {
         let p2 = Tuple::point(4.3, -4.2, 3.1);
         assert_eq!(p, p2);
     }
-    
     #[test]
     fn tuple_ne() {
         let p = Tuple::point(4.3, -4.2, 3.1);
@@ -168,7 +188,6 @@ mod tests {
         let result = p - p2;
         assert_eq!(Tuple::vector(0., 0., 0.), result);
     }
-    
     #[test]
     fn tuple_neg() {
         let t = Tuple::point(1., 2., 3.);
@@ -182,14 +201,12 @@ mod tests {
         let result = v * 2.;
         assert_eq!(Tuple::vector(2., 4., 6.), result);
     }
-    
     #[test]
     fn tuple_div() {
         let v = Tuple::vector(1., 2., 3.);
         let result = v / 2.;
         assert_eq!(Tuple::vector(0.5, 1., 1.5), result);
     }
-    
     #[test]
     fn tuple_mag() {
         let v = Tuple::vector(1., 0., 0.);
