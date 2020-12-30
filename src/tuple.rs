@@ -1,4 +1,4 @@
-use crate::utils::approx_eq;
+use super::approx_eq;
 use core::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]

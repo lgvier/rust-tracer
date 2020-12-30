@@ -1,5 +1,5 @@
-use super::tuple::*;
-use crate::utils::approx_eq;
+use super::approx_eq;
+use super::tuple::Tuple;
 use core::ops::{Index, Mul};
 use std::fmt;
 

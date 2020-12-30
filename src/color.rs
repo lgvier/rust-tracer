@@ -1,4 +1,4 @@
-use crate::utils::approx_eq;
+use super::approx_eq;
 use core::ops::{Add, Mul, Sub};
 
 pub const BLACK: Color = Color {
