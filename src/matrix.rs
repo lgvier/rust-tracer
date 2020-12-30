@@ -1,6 +1,6 @@
 use super::approx_eq;
 use super::tuple::Tuple;
-use core::ops::{Index, Mul};
+use core::ops::{Index, IndexMut, Mul};
 use std::fmt;
 
 #[macro_export]
@@ -165,6 +165,12 @@ impl Index<usize> for Matrix {
 
     fn index(&self, r: usize) -> &[f64] {
         &self.data[0..self.size][r][0..self.size]
+    }
+}
+
+impl IndexMut<usize> for Matrix {
+    fn index_mut(&mut self, r: usize) -> &mut [f64] {
+        &mut self.data[0..self.size][r][0..self.size]
     }
 }
 
