@@ -3,6 +3,34 @@ use crate::utils::approx_eq;
 use core::ops::{Index, Mul};
 use std::fmt;
 
+#[macro_export]
+macro_rules! matrix {
+    () => {
+        Matrix::empty(4);
+    };
+    ($($($x: expr),*);*) => {
+        Matrix::new($([ $($x),*]),*);
+    }
+}
+#[macro_export]
+macro_rules! matrix2 {
+    () => {
+        Matrix::empty(2);
+    };
+    ($($($x: expr),*);*) => {
+        Matrix::new2($([ $($x),*]),*);
+    }
+}
+#[macro_export]
+macro_rules! matrix3 {
+    () => {
+        Matrix::empty(3);
+    };
+    ($($($x: expr),*);*) => {
+        Matrix::new3($([ $($x),*]),*);
+    }
+}
+
 pub const IDENTITY_MATRIX: Matrix = Matrix {
     data: [
         [1., 0., 0., 0.],
@@ -57,9 +85,10 @@ impl Matrix {
         }
     }
     pub fn transpose(&self) -> Self {
-        let mut m = Matrix::empty(self.size);
-        for r in 0..self.size {
-            for c in 0..self.size {
+        let size = self.size;
+        let mut m = Matrix::empty(size);
+        for r in 0..size {
+            for c in 0..size {
                 m.data[c][r] = self.data[r][c];
             }
         }
@@ -207,89 +236,125 @@ mod tests {
     }
 
     #[test]
+    fn matrix_macros() {
+        let m = matrix2![];
+        let expected = Matrix::empty(2);
+        assert_eq!(expected, m);
+
+        let m = matrix2![0., 0.; 1., 1.];
+        let expected = Matrix::new2([0., 0.], [1., 1.]);
+        assert_eq!(expected, m);
+
+        let m = matrix3![];
+        let expected = Matrix::empty(3);
+        assert_eq!(expected, m);
+
+        let m = matrix3![0., 0., 5.; 1., 1., 6.; 2., 2., 7.];
+        let expected = Matrix::new3([0., 0., 5.], [1., 1., 6.], [2., 2., 7.]);
+        assert_eq!(expected, m);
+
+        let m = matrix![];
+        let expected = Matrix::empty(4);
+        assert_eq!(expected, m);
+
+        let m = matrix![
+            8., 2., 2., 2.;
+            3., -1., 7., 0.;
+            7., 0., 5., 4.;
+            6., -2., 0., 5.];
+        let expected = Matrix::new(
+            [8., 2., 2., 2.],
+            [3., -1., 7., 0.],
+            [7., 0., 5., 4.],
+            [6., -2., 0., 5.],
+        );
+        assert_eq!(expected, m);
+    }
+
+    #[test]
     fn matrix_eq() {
-        let m = Matrix::new(
-            [1., 2., 3., 4.],
-            [5.5, 6.5, 7.5, 8.5],
-            [9., 10., 11., 12.],
-            [13.5, 14.5, 15.5, 16.5],
-        );
-        let m2 = Matrix::new(
-            [1., 2., 3., 4.],
-            [5.5, 6.5, 7.5, 8.5],
-            [9., 10., 11., 12.],
-            [13.5, 14.5, 15.5, 16.5],
-        );
-        let m3 = Matrix::new(
-            [0., 2., 3., 4.],
-            [5.5, 6.5, 7.5, 8.5],
-            [9., 10., 11., 12.],
-            [13.5, 14.5, 15.5, 16.5],
-        );
+        let m = matrix![
+            1., 2., 3., 4.;
+            5.5, 6.5, 7.5, 8.5;
+            9., 10., 11., 12.;
+            13.5, 14.5, 15.5, 16.5
+        ];
+        let m2 = matrix![
+            1., 2., 3., 4.;
+            5.5, 6.5, 7.5, 8.5;
+            9., 10., 11., 12.;
+            13.5, 14.5, 15.5, 16.5
+        ];
+        let m3 = matrix![
+            0., 2., 3., 4.;
+            5.5, 6.5, 7.5, 8.5;
+            9., 10., 11., 12.;
+            13.5, 14.5, 15.5, 16.5
+        ];
         assert_eq!(m, m2);
         assert_ne!(m, m3);
     }
 
     #[test]
     fn matrix_mul() {
-        let m = Matrix::new(
-            [1., 2., 3., 4.],
-            [5., 6., 7., 8.],
-            [9., 8., 7., 6.],
-            [5., 4., 3., 2.],
-        );
-        let m2 = Matrix::new(
-            [-2., 1., 2., 3.],
-            [3., 2., 1., -1.],
-            [4., 3., 6., 5.],
-            [1., 2., 7., 8.],
-        );
-        let expected = Matrix::new(
-            [20., 22., 50., 48.],
-            [44., 54., 114., 108.],
-            [40., 58., 110., 102.],
-            [16., 26., 46., 42.],
-        );
+        let m = matrix![
+            1., 2., 3., 4.;
+            5., 6., 7., 8.;
+            9., 8., 7., 6.;
+            5., 4., 3., 2.
+        ];
+        let m2 = matrix![
+            -2., 1., 2., 3.;
+            3., 2., 1., -1.;
+            4., 3., 6., 5.;
+            1., 2., 7., 8.
+        ];
+        let expected = matrix![
+            20., 22., 50., 48.;
+            44., 54., 114., 108.;
+            40., 58., 110., 102.;
+            16., 26., 46., 42.
+        ];
         assert_eq!(expected, m * m2);
     }
 
     #[test]
     fn matrix_tuple_mul() {
-        let m = Matrix::new(
-            [1., 2., 3., 4.],
-            [2., 4., 4., 2.],
-            [8., 6., 4., 1.],
-            [0., 0., 0., 1.],
-        );
+        let m = matrix![
+            1., 2., 3., 4.;
+            2., 4., 4., 2.;
+            8., 6., 4., 1.;
+            0., 0., 0., 1.
+        ];
         let t = Tuple::new(1., 2., 3., 1.);
         assert_eq!(Tuple::new(18., 24., 33., 1.), m * t);
     }
 
     #[test]
     fn matrix_identity() {
-        let m = Matrix::new(
-            [1., 2., 3., 4.],
-            [2., 4., 4., 2.],
-            [8., 6., 4., 1.],
-            [0., 0., 0., 1.],
-        );
+        let m = matrix![
+            1., 2., 3., 4.;
+            2., 4., 4., 2.;
+            8., 6., 4., 1.;
+            0., 0., 0., 1.
+        ];
         assert_eq!(m, m * IDENTITY_MATRIX);
     }
 
     #[test]
     fn matrix_transpose() {
-        let m = Matrix::new(
-            [0., 9., 3., 0.],
-            [9., 8., 0., 8.],
-            [1., 8., 5., 3.],
-            [0., 0., 5., 8.],
-        );
-        let expected = Matrix::new(
-            [0., 9., 1., 0.],
-            [9., 8., 8., 0.],
-            [3., 0., 5., 5.],
-            [0., 8., 3., 8.],
-        );
+        let m = matrix![
+            0., 9., 3., 0.;
+            9., 8., 0., 8.;
+            1., 8., 5., 3.;
+            0., 0., 5., 8.
+        ];
+        let expected = matrix![
+            0., 9., 1., 0.;
+            9., 8., 8., 0.;
+            3., 0., 5., 5.;
+            0., 8., 3., 8.
+        ];
         assert_eq!(expected, m.transpose());
 
         assert_eq!(IDENTITY_MATRIX, IDENTITY_MATRIX.transpose());
@@ -297,34 +362,34 @@ mod tests {
 
     #[test]
     fn matrix_determinant_2x2() {
-        let m = Matrix::new2([1., 5.], [-3., 2.]);
+        let m = matrix2![1., 5.; -3., 2.];
         assert_eq!(17., m.determinant());
     }
 
     #[test]
     fn matrix_submatrix() {
-        let m = Matrix::new3([1., 5., 0.], [-3., 2., 7.], [0., 6., -3.]);
-        let expected = Matrix::new2([-3., 2.], [0., 6.]);
+        let m = matrix3![1., 5., 0.; -3., 2., 7.; 0., 6., -3.];
+        let expected = matrix2![-3., 2.; 0., 6.];
         assert_eq!(expected, m.submatrix(0, 2));
-        let m = Matrix::new(
-            [0., 9., 3., 0.],
-            [9., 8., 0., 8.],
-            [1., 8., 5., 3.],
-            [0., 0., 5., 8.],
-        );
-        let expected = Matrix::new3([0., 9., 3.], [1., 8., 5.], [0., 0., 5.]);
+        let m = matrix![
+            0., 9., 3., 0.;
+            9., 8., 0., 8.;
+            1., 8., 5., 3.;
+            0., 0., 5., 8.
+        ];
+        let expected = matrix3![0., 9., 3.; 1., 8., 5.; 0., 0., 5.];
         assert_eq!(expected, m.submatrix(1, 3));
     }
 
     #[test]
     fn matrix_minor() {
-        let m = Matrix::new3([3., 5., 0.], [2., -1., -7.], [6., -1., 5.]);
+        let m = matrix3![3., 5., 0.; 2., -1., -7.; 6., -1., 5.];
         assert_eq!(25., m.minor(1, 0));
     }
 
     #[test]
     fn matrix_cofactor() {
-        let m = Matrix::new3([3., 5., 0.], [2., -1., -7.], [6., -1., 5.]);
+        let m = matrix3![3., 5., 0.; 2., -1., -7.; 6., -1., 5.];
         assert_eq!(-12., m.minor(0, 0));
         assert_eq!(-12., m.cofactor(0, 0));
         assert_eq!(25., m.minor(1, 0));
@@ -333,7 +398,7 @@ mod tests {
 
     #[test]
     fn matrix_determinant_3x3() {
-        let m = Matrix::new3([1., 2., 6.], [-5., 8., -4.], [2., 6., 4.]);
+        let m = matrix3![1., 2., 6.; -5., 8., -4.; 2., 6., 4.];
         assert_eq!(56., m.cofactor(0, 0));
         assert_eq!(12., m.cofactor(0, 1));
         assert_eq!(-46., m.cofactor(0, 2));
@@ -342,12 +407,12 @@ mod tests {
 
     #[test]
     fn matrix_determinant_4x4() {
-        let m = Matrix::new(
-            [-2., -8., 3., 5.],
-            [-3., 1., 7., 3.],
-            [1., 2., -9., 6.],
-            [-6., 7., 7., -9.],
-        );
+        let m = matrix![
+            -2., -8., 3., 5.;
+            -3., 1., 7., 3.;
+            1., 2., -9., 6.;
+            -6., 7., 7., -9.
+        ];
         assert_eq!(690., m.cofactor(0, 0));
         assert_eq!(447., m.cofactor(0, 1));
         assert_eq!(210., m.cofactor(0, 2));
@@ -357,32 +422,32 @@ mod tests {
 
     #[test]
     fn matrix_is_invertible() {
-        let m = Matrix::new(
-            [6., 4., 4., 4.],
-            [5., 5., 7., 6.],
-            [4., -9., 3., -7.],
-            [9., 1., 7., -6.],
-        );
+        let m = matrix![
+            6., 4., 4., 4.;
+            5., 5., 7., 6.;
+            4., -9., 3., -7.;
+            9., 1., 7., -6.
+        ];
         assert_eq!(-2120., m.determinant());
         assert!(m.is_invertible());
-        let m = Matrix::new(
-            [-4., 2., -2., -3.],
-            [9., 6., 2., 6.],
-            [0., -5., 1., -5.],
-            [0., 0., 0., 0.],
-        );
+        let m = matrix![
+            -4., 2., -2., -3.;
+            9., 6., 2., 6.;
+            0., -5., 1., -5.;
+            0., 0., 0., 0.
+        ];
         assert_eq!(0., m.determinant());
         assert!(!m.is_invertible());
     }
 
     #[test]
     fn matrix_inverse() {
-        let m = Matrix::new(
-            [-5., 2., 6., -8.],
-            [1., -5., 1., 8.],
-            [7., 7., -6., -7.],
-            [1., -3., 7., 4.],
-        );
+        let m = matrix![
+            -5., 2., 6., -8.;
+            1., -5., 1., 8.;
+            7., 7., -6., -7.;
+            1., -3., 7., 4.
+        ];
 
         let result = m.inverse().unwrap();
 
@@ -392,13 +457,32 @@ mod tests {
         assert_eq!(105., m.cofactor(3, 2));
         assert_eq!(105. / 532., result[2][3]);
 
-        let expected = Matrix::new(
-            [0.21805, 0.45113, 0.24060, -0.04511],
-            [-0.80827, -1.45677, -0.44361, 0.52068],
-            [-0.07895, -0.22368, -0.05263, 0.19737],
-            [-0.52256, -0.81391, -0.30075, 0.30639],
-        );
+        let expected = matrix![
+            0.21805, 0.45113, 0.24060, -0.04511;
+            -0.80827, -1.45677, -0.44361, 0.52068;
+            -0.07895, -0.22368, -0.05263, 0.19737;
+            -0.52256, -0.81391, -0.30075, 0.30639
+        ];
         println!("inverse matrix: {:#?}", result);
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn multiplying_a_product_by_its_inverse() {
+        let m = matrix![
+            3., -9., 7., 3.;
+            3., -8., 2., -9.;
+            -4., 4., 4., 1.;
+            -6., 5., -1., 1.
+        ];
+        let m2 = matrix![
+            8., 2., 2., 2.;
+            3., -1., 7., 0.;
+            7., 0., 5., 4.;
+            6., -2., 0., 5.
+        ];
+
+        let mul = m * m2;
+        assert_eq!(m, mul * m2.inverse().unwrap());
     }
 }
