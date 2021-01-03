@@ -2,6 +2,24 @@ use super::matrix;
 use super::matrix::Matrix;
 
 impl Matrix {
+    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+        Self::translation(x, y, z) * self
+    }
+    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+        Self::scaling(x, y, z) * self
+    }
+    pub fn rotate_x(self, r: f64) -> Self {
+        Self::rotation_x(r) * self
+    }
+    pub fn rotate_y(self, r: f64) -> Self {
+        Self::rotation_y(r) * self
+    }
+    pub fn rotate_z(self, r: f64) -> Self {
+        Self::rotation_z(r) * self
+    }
+    pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        Self::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
     pub fn translation(x: f64, y: f64, z: f64) -> Self {
         matrix![
             1., 0., 0., x;
@@ -37,11 +55,20 @@ impl Matrix {
             0., 0., 1., 0.;
             0., 0., 0., 1.]
     }
+    pub fn shearing(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        matrix![
+            1., xy, xz, 0.;
+            yx, 1., yz, 0.;
+            zx, zy, 1., 0.;
+            0., 0., 0., 1.]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::PI;
+
+    use matrix::IDENTITY_MATRIX;
 
     use crate::tuple::Tuple;
     use crate::{point, vector};
@@ -119,5 +146,69 @@ mod tests {
 
         let inv = half_quarter.inverse().unwrap();
         assert_eq!(point!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.), inv * p);
+    }
+
+    #[test]
+    fn transform_shearing() {
+        let p = point!(2., 3., 4.);
+        {
+            // x in proportion to y
+            let t = Matrix::shearing(1., 0., 0., 0., 0., 0.);
+            assert_eq!(point!(5., 3., 4.), t * p);
+        }
+        {
+            // x in proportion to z
+            let t = Matrix::shearing(0., 1., 0., 0., 0., 0.);
+            assert_eq!(point!(6., 3., 4.), t * p);
+        }
+        {
+            // y in proportion to x
+            let t = Matrix::shearing(0., 0., 1., 0., 0., 0.);
+            assert_eq!(point!(2., 5., 4.), t * p);
+        }
+        {
+            // y in proportion to z
+            let t = Matrix::shearing(0., 0., 0., 1., 0., 0.);
+            assert_eq!(point!(2., 7., 4.), t * p);
+        }
+        {
+            // z in proportion to x
+            let t = Matrix::shearing(0., 0., 0., 0., 1., 0.);
+            assert_eq!(point!(2., 3., 6.), t * p);
+        }
+        {
+            // z in proportion to y
+            let t = Matrix::shearing(0., 0., 0., 0., 0., 1.);
+            assert_eq!(point!(2., 3., 7.), t * p);
+        }
+    }
+
+    #[test]
+    fn transform_chaining() {
+        let p = point!(1., 0., 1.);
+        let a = Matrix::rotation_x(PI / 2.);
+        let b = Matrix::scaling(5., 5., 5.);
+        let c = Matrix::translation(10., 5., 7.);
+        let expected = point!(15., 0., 7.);
+
+        // individual transformations
+        let p2 = a * p;
+        assert_eq!(point!(1., -1., 0.), p2);
+        let p3 = b * p2;
+        assert_eq!(point!(5., -5., 0.), p3);
+        let p4 = c * p3;
+        assert_eq!(expected, p4);
+
+        // combined transformations
+        let t = c * b * a;
+        assert_eq!(expected, t * p);
+
+        // fluent API
+        let t_fluent = IDENTITY_MATRIX
+            .rotate_x(PI / 2.)
+            .scale(5., 5., 5.)
+            .translate(10., 5., 7.);
+        assert_eq!(t, t_fluent);
+        assert_eq!(expected, t_fluent * p);
     }
 }
