@@ -6,6 +6,11 @@ pub const BLACK: Color = Color {
     g: 0.,
     b: 0.,
 };
+pub const WHITE: Color = Color {
+    r: 1.,
+    g: 1.,
+    b: 1.,
+};
 pub const RED: Color = Color {
     r: 1.,
     g: 0.,
