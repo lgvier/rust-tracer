@@ -1,32 +1,123 @@
-use super::matrix::{Matrix, IDENTITY_MATRIX};
-use super::tuple::Tuple;
+use super::matrix;
+use super::matrix::Matrix;
 
 impl Matrix {
     pub fn translation(x: f64, y: f64, z: f64) -> Self {
-        let mut m = IDENTITY_MATRIX;
-        m[0][3] = x;
-        m[1][3] = y;
-        m[2][3] = z;
-        m
+        matrix![
+            1., 0., 0., x;
+            0., 1., 0., y;
+            0., 0., 1., z;
+            0., 0., 0., 1.]
+    }
+    pub fn scaling(x: f64, y: f64, z: f64) -> Self {
+        matrix![
+            x, 0., 0., 0.;
+            0., y, 0., 0.;
+            0., 0., z, 0.;
+            0., 0., 0., 1.]
+    }
+    pub fn rotation_x(r: f64) -> Self {
+        matrix![
+            1., 0., 0., 0.;
+            0., r.cos(), -r.sin(), 0.;
+            0., r.sin(), r.cos(), 0.;
+            0., 0., 0., 1.]
+    }
+    pub fn rotation_y(r: f64) -> Self {
+        matrix![
+            r.cos(), 0., r.sin(), 0.;
+            0., 1., 0., 0.;
+            -r.sin(), 0., r.cos(), 0.;
+            0., 0., 0., 1.]
+    }
+    pub fn rotation_z(r: f64) -> Self {
+        matrix![
+            r.cos(), -r.sin(), 0., 0.;
+            r.sin(), r.cos(), 0., 0.;
+            0., 0., 1., 0.;
+            0., 0., 0., 1.]
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::PI;
+
+    use crate::tuple::Tuple;
+    use crate::{point, vector};
+
     use super::*;
 
     #[test]
-    fn translation_mul() {
+    fn transform_translation() {
         let t = Matrix::translation(5., -3., 2.);
-        let p = Tuple::point(-3., 4., 5.);
-        assert_eq!(Tuple::point(2., 1., 7.), t * p);
+        let p = point!(-3., 4., 5.);
+        assert_eq!(point!(2., 1., 7.), t * p);
 
         // moves point in reverse
         let inv = t.inverse().unwrap();
-        assert_eq!(Tuple::point(-8., 7., 3.), inv * p);
+        assert_eq!(point!(-8., 7., 3.), inv * p);
 
         // translation doesnt affect vectors
-        let v = Tuple::vector(-3., 4., 5.);
+        let v = vector!(-3., 4., 5.);
         assert_eq!(v, t * v);
+    }
+
+    #[test]
+    fn transform_scaling() {
+        let t = Matrix::scaling(2., 3., 4.);
+        let p = point!(-4., 6., 8.);
+        assert_eq!(point!(-8., 18., 32.), t * p);
+
+        let v = vector!(-4., 6., 8.);
+        assert_eq!(vector!(-8., 18., 32.), t * v);
+
+        let inv = t.inverse().unwrap();
+        assert_eq!(vector!(-2., 2., 2.), inv * v);
+    }
+
+    #[test]
+    fn transform_rotation_x() {
+        let p = point!(0., 1., 0.);
+        let half_quarter = Matrix::rotation_x(PI / 4.);
+        let full_quarter = Matrix::rotation_x(PI / 2.);
+        assert_eq!(
+            point!(0., 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
+            half_quarter * p
+        );
+        assert_eq!(point!(0., 0., 1.), full_quarter * p);
+
+        let inv = half_quarter.inverse().unwrap();
+        assert_eq!(point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.), inv * p);
+    }
+
+    #[test]
+    fn transform_rotation_y() {
+        let p = point!(0., 0., 1.);
+        let half_quarter = Matrix::rotation_y(PI / 4.);
+        let full_quarter = Matrix::rotation_y(PI / 2.);
+        assert_eq!(
+            point!(2f64.sqrt() / 2., 0., 2f64.sqrt() / 2.),
+            half_quarter * p
+        );
+        assert_eq!(point!(1., 0., 0.), full_quarter * p);
+
+        let inv = half_quarter.inverse().unwrap();
+        assert_eq!(point!(-2f64.sqrt() / 2., 0., 2f64.sqrt() / 2.), inv * p);
+    }
+
+    #[test]
+    fn transform_rotation_z() {
+        let p = point!(0., 1., 0.);
+        let half_quarter = Matrix::rotation_z(PI / 4.);
+        let full_quarter = Matrix::rotation_z(PI / 2.);
+        assert_eq!(
+            point!(-2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.),
+            half_quarter * p
+        );
+        assert_eq!(point!(-1., 0., 0.), full_quarter * p);
+
+        let inv = half_quarter.inverse().unwrap();
+        assert_eq!(point!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.), inv * p);
     }
 }

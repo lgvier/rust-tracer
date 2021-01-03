@@ -1,7 +1,27 @@
 use super::approx_eq;
 use core::ops::{Add, Div, Mul, Neg, Sub};
+use std::fmt;
 
-#[derive(Debug, Copy, Clone)]
+#[macro_export]
+macro_rules! point {
+    () => {
+        Tuple::point(0., 0., 0.)
+    };
+    ($x:expr, $y:expr, $z:expr) => {
+        Tuple::point($x, $y, $z)
+    };
+}
+#[macro_export]
+macro_rules! vector {
+    () => {
+        Tuple::vector(0., 0., 0.)
+    };
+    ($x:expr, $y:expr, $z:expr) => {
+        Tuple::vector($x, $y, $z)
+    };
+}
+
+#[derive(Copy, Clone)]
 pub struct Tuple {
     pub x: f64,
     pub y: f64,
@@ -41,6 +61,24 @@ impl Tuple {
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,
         )
+    }
+}
+
+impl fmt::Debug for Tuple {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let struct_name = if self.is_point() {
+            "point"
+        } else if self.is_vector() {
+            "vector"
+        } else {
+            "tuple"
+        };
+        let mut ds = f.debug_tuple(struct_name);
+        ds.field(&self.x).field(&self.y).field(&self.z);
+        if !self.is_point() && !self.is_vector() {
+            ds.field(&self.w);
+        }
+        ds.finish()
     }
 }
 
@@ -162,80 +200,80 @@ mod tests {
 
     #[test]
     fn tuple_eq() {
-        let p = Tuple::point(4.3, -4.2, 3.1);
-        let p2 = Tuple::point(4.3, -4.2, 3.1);
+        let p = point!(4.3, -4.2, 3.1);
+        let p2 = point!(4.3, -4.2, 3.1);
         assert_eq!(p, p2);
     }
     #[test]
     fn tuple_ne() {
-        let p = Tuple::point(4.3, -4.2, 3.1);
-        let v = Tuple::vector(4.3, -4.2, 3.1);
+        let p = point!(4.3, -4.2, 3.1);
+        let v = vector!(4.3, -4.2, 3.1);
         assert_ne!(p, v);
     }
 
     #[test]
     fn tuple_add() {
-        let p = Tuple::point(1., 2., 3.);
-        let v = Tuple::vector(1., 2., 3.);
+        let p = point!(1., 2., 3.);
+        let v = vector!(1., 2., 3.);
         let result = p + v;
-        assert_eq!(Tuple::point(2., 4., 6.), result);
+        assert_eq!(point!(2., 4., 6.), result);
     }
 
     #[test]
     fn tuple_sub() {
-        let p = Tuple::point(1., 2., 3.);
-        let p2 = Tuple::point(1., 2., 3.);
+        let p = point!(1., 2., 3.);
+        let p2 = point!(1., 2., 3.);
         let result = p - p2;
-        assert_eq!(Tuple::vector(0., 0., 0.), result);
+        assert_eq!(vector!(0., 0., 0.), result);
     }
     #[test]
     fn tuple_neg() {
-        let t = Tuple::point(1., 2., 3.);
+        let t = point!(1., 2., 3.);
         let result = -t;
         assert_eq!(Tuple::new(-1., -2., -3., -1.), result);
     }
 
     #[test]
     fn tuple_mul() {
-        let v = Tuple::vector(1., 2., 3.);
+        let v = vector!(1., 2., 3.);
         let result = v * 2.;
-        assert_eq!(Tuple::vector(2., 4., 6.), result);
+        assert_eq!(vector!(2., 4., 6.), result);
     }
     #[test]
     fn tuple_div() {
-        let v = Tuple::vector(1., 2., 3.);
+        let v = vector!(1., 2., 3.);
         let result = v / 2.;
-        assert_eq!(Tuple::vector(0.5, 1., 1.5), result);
+        assert_eq!(vector!(0.5, 1., 1.5), result);
     }
     #[test]
     fn tuple_mag() {
-        let v = Tuple::vector(1., 0., 0.);
+        let v = vector!(1., 0., 0.);
         assert_eq!(1., v.magnitude());
-        let v = Tuple::vector(1., 2., 3.);
+        let v = vector!(1., 2., 3.);
         assert_eq!(14_f64.sqrt(), v.magnitude());
     }
 
     #[test]
     fn tuple_norm() {
-        let v = Tuple::vector(4., 0., 0.);
-        assert_eq!(Tuple::vector(1., 0., 0.), v.normalize());
-        let v = Tuple::vector(1., 2., 3.);
-        assert_eq!(Tuple::vector(0.26726, 0.53452, 0.80178), v.normalize());
+        let v = vector!(4., 0., 0.);
+        assert_eq!(vector!(1., 0., 0.), v.normalize());
+        let v = vector!(1., 2., 3.);
+        assert_eq!(vector!(0.26726, 0.53452, 0.80178), v.normalize());
         assert_eq!(1., v.normalize().magnitude());
     }
 
     #[test]
     fn tuple_dot_product() {
-        let v = Tuple::vector(1., 2., 3.);
-        let v2 = Tuple::vector(2., 3., 4.);
+        let v = vector!(1., 2., 3.);
+        let v2 = vector!(2., 3., 4.);
         assert_eq!(20., v.dot(&v2));
     }
 
     #[test]
     fn tuple_cross_product() {
-        let v = Tuple::vector(1., 2., 3.);
-        let v2 = Tuple::vector(2., 3., 4.);
-        assert_eq!(Tuple::vector(-1., 2., -1.), v.cross(&v2));
-        assert_eq!(Tuple::vector(1., -2., 1.), v2.cross(&v));
+        let v = vector!(1., 2., 3.);
+        let v2 = vector!(2., 3., 4.);
+        assert_eq!(vector!(-1., 2., -1.), v.cross(&v2));
+        assert_eq!(vector!(1., -2., 1.), v2.cross(&v));
     }
 }

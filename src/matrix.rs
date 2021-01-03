@@ -247,7 +247,9 @@ mod tests {
         let expected = Matrix::empty(2);
         assert_eq!(expected, m);
 
-        let m = matrix2![0., 0.; 1., 1.];
+        let m = matrix2![
+            0., 0.;
+            1., 1.];
         let expected = Matrix::new2([0., 0.], [1., 1.]);
         assert_eq!(expected, m);
 
@@ -255,7 +257,10 @@ mod tests {
         let expected = Matrix::empty(3);
         assert_eq!(expected, m);
 
-        let m = matrix3![0., 0., 5.; 1., 1., 6.; 2., 2., 7.];
+        let m = matrix3![
+            0., 0., 5.;
+            1., 1., 6.;
+            2., 2., 7.];
         let expected = Matrix::new3([0., 0., 5.], [1., 1., 6.], [2., 2., 7.]);
         assert_eq!(expected, m);
 
@@ -368,13 +373,18 @@ mod tests {
 
     #[test]
     fn matrix_determinant_2x2() {
-        let m = matrix2![1., 5.; -3., 2.];
+        let m = matrix2![
+            1., 5.;
+            -3., 2.];
         assert_eq!(17., m.determinant());
     }
 
     #[test]
     fn matrix_submatrix() {
-        let m = matrix3![1., 5., 0.; -3., 2., 7.; 0., 6., -3.];
+        let m = matrix3![
+            1., 5., 0.;
+            -3., 2., 7.;
+            0., 6., -3.];
         let expected = matrix2![-3., 2.; 0., 6.];
         assert_eq!(expected, m.submatrix(0, 2));
         let m = matrix![
@@ -389,13 +399,19 @@ mod tests {
 
     #[test]
     fn matrix_minor() {
-        let m = matrix3![3., 5., 0.; 2., -1., -7.; 6., -1., 5.];
+        let m = matrix3![
+            3., 5., 0.;
+            2., -1., -7.;
+            6., -1., 5.];
         assert_eq!(25., m.minor(1, 0));
     }
 
     #[test]
     fn matrix_cofactor() {
-        let m = matrix3![3., 5., 0.; 2., -1., -7.; 6., -1., 5.];
+        let m = matrix3![
+            3., 5., 0.;
+            2., -1., -7.;
+            6., -1., 5.];
         assert_eq!(-12., m.minor(0, 0));
         assert_eq!(-12., m.cofactor(0, 0));
         assert_eq!(25., m.minor(1, 0));
@@ -404,7 +420,10 @@ mod tests {
 
     #[test]
     fn matrix_determinant_3x3() {
-        let m = matrix3![1., 2., 6.; -5., 8., -4.; 2., 6., 4.];
+        let m = matrix3![
+            1., 2., 6.;
+            -5., 8., -4.;
+            2., 6., 4.];
         assert_eq!(56., m.cofactor(0, 0));
         assert_eq!(12., m.cofactor(0, 1));
         assert_eq!(-46., m.cofactor(0, 2));
