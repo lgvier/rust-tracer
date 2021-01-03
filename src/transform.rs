@@ -1,5 +1,28 @@
 use super::matrix;
 use super::matrix::Matrix;
+use super::tuple::Tuple;
+
+// Fluent API
+impl Tuple {
+    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+        Matrix::translation(x, y, z) * self
+    }
+    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+        Matrix::scaling(x, y, z) * self
+    }
+    pub fn rotate_x(self, r: f64) -> Self {
+        Matrix::rotation_x(r) * self
+    }
+    pub fn rotate_y(self, r: f64) -> Self {
+        Matrix::rotation_y(r) * self
+    }
+    pub fn rotate_z(self, r: f64) -> Self {
+        Matrix::rotation_z(r) * self
+    }
+    pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
+}
 
 impl Matrix {
     pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
@@ -20,6 +43,10 @@ impl Matrix {
     pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
         Self::shearing(xy, xz, yx, yz, zx, zy) * self
     }
+}
+
+// Static methods
+impl Matrix {
     pub fn translation(x: f64, y: f64, z: f64) -> Self {
         matrix![
             1., 0., 0., x;
@@ -70,7 +97,6 @@ mod tests {
 
     use matrix::IDENTITY_MATRIX;
 
-    use crate::tuple::Tuple;
     use crate::{point, vector};
 
     use super::*;
