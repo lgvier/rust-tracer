@@ -11,3 +11,4 @@ doctest = false
 
 [dependencies]
 png = "0.16.8"
+chrono = "0.4.19"
