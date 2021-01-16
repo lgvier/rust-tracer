@@ -25,6 +25,7 @@ fn main() -> std::io::Result<()> {
                 let p = twelve.rotate_y(i * (TAU / count as f64));
                 for li in 0..line_width {
                     let x = (p.x * (line_radius + li as f64)) + center;
+                    // not sure why I had to flip y...
                     let y = -(p.z * (line_radius + li as f64)) + center;
                     //println!("{} / {}: {:?} -> {}, {}", i, count, p, x, y);
                     c.write_pixel(x as usize, y as usize, color);
