@@ -5,52 +5,52 @@ use crate::tuple::Tuple;
 
 // Fluent API
 impl Tuple {
-    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn translated(self, x: f64, y: f64, z: f64) -> Self {
         Matrix::translation(x, y, z) * self
     }
-    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn scaled(self, x: f64, y: f64, z: f64) -> Self {
         Matrix::scaling(x, y, z) * self
     }
-    pub fn rotate_x(self, r: f64) -> Self {
+    pub fn rotated_x(self, r: f64) -> Self {
         Matrix::rotation_x(r) * self
     }
-    pub fn rotate_y(self, r: f64) -> Self {
+    pub fn rotated_y(self, r: f64) -> Self {
         Matrix::rotation_y(r) * self
     }
-    pub fn rotate_z(self, r: f64) -> Self {
+    pub fn rotated_z(self, r: f64) -> Self {
         Matrix::rotation_z(r) * self
     }
-    pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+    pub fn sheared(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
         Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
     }
 }
 
 impl Ray {
-    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn translated(self, x: f64, y: f64, z: f64) -> Self {
         Matrix::translation(x, y, z) * self
     }
-    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn scaled(self, x: f64, y: f64, z: f64) -> Self {
         Matrix::scaling(x, y, z) * self
     }
 }
 
 impl Matrix {
-    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn translated(self, x: f64, y: f64, z: f64) -> Self {
         Self::translation(x, y, z) * self
     }
-    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+    pub fn scaled(self, x: f64, y: f64, z: f64) -> Self {
         Self::scaling(x, y, z) * self
     }
-    pub fn rotate_x(self, r: f64) -> Self {
+    pub fn rotated_x(self, r: f64) -> Self {
         Self::rotation_x(r) * self
     }
-    pub fn rotate_y(self, r: f64) -> Self {
+    pub fn rotated_y(self, r: f64) -> Self {
         Self::rotation_y(r) * self
     }
-    pub fn rotate_z(self, r: f64) -> Self {
+    pub fn rotated_z(self, r: f64) -> Self {
         Self::rotation_z(r) * self
     }
-    pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+    pub fn sheared(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
         Self::shearing(xy, xz, yx, yz, zx, zy) * self
     }
 }
@@ -238,9 +238,9 @@ mod tests {
 
         // fluent API
         let t_fluent = IDENTITY_MATRIX
-            .rotate_x(PI / 2.)
-            .scale(5., 5., 5.)
-            .translate(10., 5., 7.);
+            .rotated_x(PI / 2.)
+            .scaled(5., 5., 5.)
+            .translated(10., 5., 7.);
         assert_eq!(t, t_fluent);
         assert_eq!(expected, t_fluent * p);
     }
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn transform_ray_translation() {
         let r = ray!(1., 2., 3.; 0., 1., 0.);
-        let r2 = r.translate(3., 4., 5.);
+        let r2 = r.translated(3., 4., 5.);
 
         assert_eq!(point!(4., 6., 8.), r2.origin);
         assert_eq!(vector!(0., 1., 0.), r2.direction);
@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn transform_ray_scaling() {
         let r = ray!(1., 2., 3.; 0., 1., 0.);
-        let r2 = r.scale(2., 3., 4.);
+        let r2 = r.scaled(2., 3., 4.);
 
         assert_eq!(point!(2., 6., 12.), r2.origin);
         assert_eq!(vector!(0., 3., 0.), r2.direction);

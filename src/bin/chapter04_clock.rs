@@ -14,7 +14,7 @@ fn main() -> std::io::Result<()> {
     let radius = 220f64;
     let twelve = point!(0., 0., 1.);
 
-    let folder = "/tmp/clock";
+    let folder = "/tmp/04_clock";
     create_dir_all(folder)?;
 
     loop {
@@ -22,7 +22,7 @@ fn main() -> std::io::Result<()> {
 
         let mut plot_line =
             |i: f64, count: usize, line_radius: f64, line_width: usize, color: Color| {
-                let p = twelve.rotate_y(i * (TAU / count as f64));
+                let p = twelve.rotated_y(i * (TAU / count as f64));
                 for li in 0..line_width {
                     let x = (p.x * (line_radius + li as f64)) + center;
                     // not sure why I had to flip y...

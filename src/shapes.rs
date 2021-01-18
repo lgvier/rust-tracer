@@ -1,7 +1,11 @@
-use crate::matrix::{Matrix, IDENTITY_MATRIX};
-use crate::point;
-use crate::ray::Ray;
-use crate::tuple::Tuple;
+use crate::{
+    intersection,
+    intersection::Intersection,
+    matrix::{Matrix, IDENTITY_MATRIX},
+    point,
+    ray::Ray,
+    tuple::Tuple,
+};
 
 #[macro_export]
 macro_rules! sphere {
@@ -13,6 +17,23 @@ macro_rules! sphere {
 #[derive(Debug, PartialEq)]
 pub enum Shape {
     Sphere(Sphere),
+}
+
+impl Shape {
+    pub fn intersect<'a>(&'a self, r: Ray) -> Vec<f64> {
+        match self {
+            Shape::Sphere(s) => s.intersect(r),
+        }
+    }
+
+    pub fn hit<'a>(&'a self, r: Ray) -> Option<Intersection> {
+        let xs = self
+            .intersect(r)
+            .iter()
+            .map(|e| intersection!(*e, self))
+            .collect();
+        Intersection::hit(xs)
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -111,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn sphere_set_transform_intersect() {
+    fn sphere_set_transform_scaled_intersect() {
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::scaling(2., 2., 2.));
@@ -119,5 +140,14 @@ mod tests {
         assert_eq!(2, xs.len());
         assert_eq!(3., xs[0]);
         assert_eq!(7., xs[1]);
+    }
+
+    #[test]
+    fn sphere_set_transform_translated_intersect() {
+        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(5., 0., 0.));
+        let xs = s.intersect(r);
+        assert!(xs.is_empty());
     }
 }

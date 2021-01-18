@@ -44,6 +44,6 @@ fn main() -> std::io::Result<()> {
     }
     println!("end p: {:#?}, count: {}", p, count);
 
-    c.save("/tmp/projectile.png")?;
+    c.save("/tmp/02_projectile.png")?;
     Ok(())
 }
