@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{BufWriter, Result};
 
-use super::color::*;
+use crate::color::*;
 
 #[derive(Debug, Clone)]
 pub struct Canvas {

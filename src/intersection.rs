@@ -1,5 +1,4 @@
-use super::shapes::{Shape, Sphere};
-use super::sphere;
+use crate::shapes::Shape;
 
 #[macro_export]
 macro_rules! intersection {
@@ -20,15 +19,36 @@ impl Intersection<'_> {
         Intersection { t, object }
     }
 
-    pub fn hit<'a>(xs: &'a Vec<&'a Intersection<'a>>) -> &'a Intersection<'a> {
-        xs[0]
+    pub fn hit<'a>(xs: &'a Vec<&'a Intersection<'a>>) -> Option<&'a Intersection<'a>> {
+        // let mut min = f64::MAX;
+        // let mut response: Option<&'a Intersection<'a>> = None;
+        // for i in xs {
+        //     if i.t >= 0. && i.t < min {
+        //         min = i.t;
+        //         response = Some(i);
+        //     }
+        // }
+        // response
+        xs.iter()
+            .filter(|i| i.t >= 0.)
+            .fold(None, |acc, &i| match acc {
+                Some(ai) => {
+                    if i.t < ai.t {
+                        Some(i)
+                    } else {
+                        acc
+                    }
+                }
+                None => Some(i),
+            })
     }
 }
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
+    use crate::shapes::Sphere;
+    use crate::sphere;
 
     #[test]
     fn intersection_ctor() {
@@ -36,14 +56,7 @@ mod tests {
         let shape = &Shape::Sphere(s);
         let i = Intersection::new(3.5, shape);
         assert_eq!(3.5, i.t);
-        // match &i.object {
-        //     &Shape::Sphere(_) => {
-        //         //  x = s == s2;
-        //     }
-        //     _ => {
-        //         panic!("");
-        //     }
-        // }
+        assert!(shape == i.object);
     }
 
     #[test]
@@ -55,7 +68,7 @@ mod tests {
         let xs = vec![&i2, &i1];
 
         let i = Intersection::hit(&xs);
-        assert_eq!(&i1, i);
+        assert_eq!(Some(&i1), i);
     }
 
     #[test]
@@ -67,7 +80,7 @@ mod tests {
         let xs = vec![&i2, &i1];
 
         let i = Intersection::hit(&xs);
-        assert_eq!(&i2, i);
+        assert_eq!(Some(&i2), i);
     }
 
     #[test]
@@ -79,6 +92,19 @@ mod tests {
         let xs = vec![&i2, &i1];
 
         let i = Intersection::hit(&xs);
-        assert_eq!(&i2, i);
+        assert_eq!(None, i);
+    }
+    #[test]
+    fn intersection_hit_lowest_non_negative() {
+        let s = sphere!();
+        let shape = &Shape::Sphere(s);
+        let i1 = intersection!(5., shape);
+        let i2 = intersection!(7., shape);
+        let i3 = intersection!(-3., shape);
+        let i4 = intersection!(2., shape);
+        let xs = vec![&i1, &i2, &i3, &i4];
+
+        let i = Intersection::hit(&xs);
+        assert_eq!(Some(&i4), i);
     }
 }

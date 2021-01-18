@@ -1,4 +1,4 @@
-use super::approx_eq;
+use crate::{approx_eq, matrix::Matrix};
 use core::ops::{Add, Div, Mul, Neg, Sub};
 use std::fmt;
 
@@ -135,6 +135,14 @@ impl Mul<f64> for Tuple {
             self.z * scalar,
             self.w * scalar,
         )
+    }
+}
+
+impl Mul<Matrix> for Tuple {
+    type Output = Tuple;
+
+    fn mul(self, other: Matrix) -> Tuple {
+        other * self
     }
 }
 

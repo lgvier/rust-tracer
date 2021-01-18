@@ -1,5 +1,4 @@
-use super::approx_eq;
-use super::tuple::Tuple;
+use crate::{approx_eq, ray::Ray, tuple::Tuple};
 use core::ops::{Index, IndexMut, Mul};
 use std::fmt;
 
@@ -214,6 +213,14 @@ impl Mul<Tuple> for Matrix {
                 + self[i][3] * other.w
         };
         Tuple::new(dot(0), dot(1), dot(2), dot(3))
+    }
+}
+
+impl Mul<Ray> for Matrix {
+    type Output = Ray;
+
+    fn mul(self, other: Ray) -> Ray {
+        other * self
     }
 }
 

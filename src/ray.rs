@@ -1,5 +1,5 @@
-use super::point;
-use super::tuple::Tuple;
+use crate::{matrix::Matrix, tuple::Tuple};
+use std::ops::Mul;
 
 #[macro_export]
 macro_rules! ray {
@@ -14,7 +14,7 @@ macro_rules! ray {
     };
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Ray {
     pub origin: Tuple,
     pub direction: Tuple,
@@ -31,12 +31,21 @@ impl Ray {
     }
 }
 
+impl Mul<Matrix> for Ray {
+    type Output = Ray;
+
+    fn mul(self, other: Matrix) -> Ray {
+        Ray {
+            origin: self.origin * other,
+            direction: self.direction * other,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-
-    use crate::vector;
-
     use super::*;
+    use crate::{point, vector};
 
     #[test]
     fn ray_ctor() {

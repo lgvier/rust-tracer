@@ -1,6 +1,7 @@
-use super::matrix;
-use super::matrix::Matrix;
-use super::tuple::Tuple;
+use crate::matrix;
+use crate::matrix::Matrix;
+use crate::ray::Ray;
+use crate::tuple::Tuple;
 
 // Fluent API
 impl Tuple {
@@ -21,6 +22,15 @@ impl Tuple {
     }
     pub fn shear(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
         Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
+}
+
+impl Ray {
+    pub fn translate(self, x: f64, y: f64, z: f64) -> Self {
+        Matrix::translation(x, y, z) * self
+    }
+    pub fn scale(self, x: f64, y: f64, z: f64) -> Self {
+        Matrix::scaling(x, y, z) * self
     }
 }
 
@@ -93,13 +103,10 @@ impl Matrix {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
-    use matrix::IDENTITY_MATRIX;
-
-    use crate::{point, vector};
-
     use super::*;
+    use crate::{point, ray, vector};
+    use matrix::IDENTITY_MATRIX;
+    use std::f64::consts::PI;
 
     #[test]
     fn transform_translation() {
@@ -236,5 +243,23 @@ mod tests {
             .translate(10., 5., 7.);
         assert_eq!(t, t_fluent);
         assert_eq!(expected, t_fluent * p);
+    }
+
+    #[test]
+    fn transform_ray_translation() {
+        let r = ray!(1., 2., 3.; 0., 1., 0.);
+        let r2 = r.translate(3., 4., 5.);
+
+        assert_eq!(point!(4., 6., 8.), r2.origin);
+        assert_eq!(vector!(0., 1., 0.), r2.direction);
+    }
+
+    #[test]
+    fn transform_ray_scaling() {
+        let r = ray!(1., 2., 3.; 0., 1., 0.);
+        let r2 = r.scale(2., 3., 4.);
+
+        assert_eq!(point!(2., 6., 12.), r2.origin);
+        assert_eq!(vector!(0., 3., 0.), r2.direction);
     }
 }
