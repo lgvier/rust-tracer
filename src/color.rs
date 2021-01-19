@@ -1,6 +1,13 @@
 use crate::approx_eq;
 use core::ops::{Add, Mul, Sub};
 
+#[macro_export]
+macro_rules! color {
+    ($r:expr, $g:expr, $b:expr) => {
+        Color::new($r, $g, $b)
+    };
+}
+
 pub const BLACK: Color = Color {
     r: 0.,
     g: 0.,

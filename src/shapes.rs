@@ -1,6 +1,7 @@
 use crate::{
     intersection,
     intersection::Intersection,
+    material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
     point,
     ray::Ray,
@@ -34,17 +35,31 @@ impl Shape {
             .collect();
         Intersection::hit(xs)
     }
+
+    pub fn normal_at(&self, p: Tuple) -> Tuple {
+        match self {
+            Shape::Sphere(s) => s.normal_at(p),
+        }
+    }
+
+    pub fn material(&self) -> Material {
+        match self {
+            Shape::Sphere(s) => s.material,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Sphere {
     transform: Matrix,
+    material: Material,
 }
 
 impl Sphere {
     pub fn new() -> Self {
         Sphere {
             transform: IDENTITY_MATRIX,
+            material: Material::default(),
         }
     }
     pub fn intersect(&self, r: Ray) -> Vec<f64> {
@@ -75,6 +90,10 @@ impl Sphere {
         let obj_normal = (obj_point - point!()).normalize();
         let world_normal = (transform_inverse.transpose() * obj_normal).to_vector();
         world_normal.normalize()
+    }
+
+    pub fn set_material(&mut self, material: Material) {
+        self.material = material;
     }
 }
 
@@ -212,5 +231,19 @@ mod tests {
         s.set_transform(Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(PI / 5.));
         let n = s.normal_at(point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
         assert_eq!(vector!(0., 0.97014, -0.24254), n);
+    }
+
+    #[test]
+    fn sphere_has_a_default_material() {
+        let s = sphere!();
+        assert_eq!(Material::default(), s.material);
+    }
+
+    #[test]
+    fn sphere_set_material() {
+        let mut s = sphere!();
+        let m = Material::default().with_ambient(1.);
+        s.set_material(m);
+        assert_eq!(1., s.material.ambient);
     }
 }
