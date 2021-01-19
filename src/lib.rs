@@ -8,6 +8,7 @@ pub mod ray;
 pub mod shapes;
 pub mod transform;
 pub mod tuple;
+pub mod world;
 
 pub const EPSILON: f64 = 0.00001;
 

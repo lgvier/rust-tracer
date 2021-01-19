@@ -2,7 +2,6 @@ use crate::shapes::Shape;
 
 #[macro_export]
 macro_rules! intersection {
-    // ray!(origin, direction)
     ($t:expr, $object:expr) => {
         Intersection::new($t, $object)
     };
