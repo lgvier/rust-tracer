@@ -48,10 +48,10 @@ impl Sphere {
         }
     }
     pub fn intersect(&self, r: Ray) -> Vec<f64> {
-        let local_ray = r * self.transform.inverse().unwrap();
-        let sphere_to_ray = local_ray.origin - point!();
-        let a = local_ray.direction.dot(&local_ray.direction);
-        let b = 2. * local_ray.direction.dot(&sphere_to_ray);
+        let obj_ray = r * self.transform.inverse().unwrap();
+        let sphere_to_ray = obj_ray.origin - point!();
+        let a = obj_ray.direction.dot(&obj_ray.direction);
+        let b = 2. * obj_ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - 1.;
 
         let discriminant = b * b - 4. * a * c;
@@ -68,12 +68,21 @@ impl Sphere {
     pub fn set_transform(&mut self, transform: Matrix) {
         self.transform = transform;
     }
+
+    pub fn normal_at(&self, p: Tuple) -> Tuple {
+        let transform_inverse = self.transform.inverse().unwrap();
+        let obj_point = transform_inverse * p;
+        let obj_normal = (obj_point - point!()).normalize();
+        let world_normal = (transform_inverse.transpose() * obj_normal).to_vector();
+        world_normal.normalize()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ray;
+    use crate::{ray, vector};
+    use std::f64::consts::PI;
 
     #[test]
     fn sphere_ray_intersects_at_two_pts() {
@@ -149,5 +158,59 @@ mod tests {
         s.set_transform(Matrix::translation(5., 0., 0.));
         let xs = s.intersect(r);
         assert!(xs.is_empty());
+    }
+
+    #[test]
+    fn sphere_normal_x_axis() {
+        let s = sphere!();
+        let n = s.normal_at(point!(1., 0., 0.));
+        assert_eq!(vector!(1., 0., 0.), n);
+    }
+
+    #[test]
+    fn sphere_normal_y_axis() {
+        let s = sphere!();
+        let n = s.normal_at(point!(0., 1., 0.));
+        assert_eq!(vector!(0., 1., 0.), n);
+    }
+
+    #[test]
+    fn sphere_normal_z_axis() {
+        let s = sphere!();
+        let n = s.normal_at(point!(0., 0., 1.));
+        assert_eq!(vector!(0., 0., 1.), n);
+    }
+
+    #[test]
+    fn sphere_normal_nonaxial() {
+        let s = sphere!();
+        let n = s.normal_at(point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.));
+        assert_eq!(
+            vector!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.),
+            n
+        );
+    }
+
+    #[test]
+    fn sphere_normal_is_normalized_vector() {
+        let s = sphere!();
+        let n = s.normal_at(point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.));
+        assert_eq!(n.normalize(), n);
+    }
+
+    #[test]
+    fn sphere_normal_translated() {
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(0., 1., 0.));
+        let n = s.normal_at(point!(0., 1.70711, -0.70711));
+        assert_eq!(vector!(0., 0.70711, -0.70711), n);
+    }
+
+    #[test]
+    fn sphere_normal_transformed() {
+        let mut s = sphere!();
+        s.set_transform(Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(PI / 5.));
+        let n = s.normal_at(point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
+        assert_eq!(vector!(0., 0.97014, -0.24254), n);
     }
 }

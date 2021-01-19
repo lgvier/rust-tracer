@@ -45,6 +45,12 @@ impl Tuple {
     pub fn is_vector(&self) -> bool {
         self.w == 0.
     }
+    pub fn to_point(&self) -> Self {
+        Self::point(self.x, self.y, self.z)
+    }
+    pub fn to_vector(&self) -> Self {
+        Self::vector(self.x, self.y, self.z)
+    }
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
@@ -61,6 +67,9 @@ impl Tuple {
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,
         )
+    }
+    pub fn reflect(&self, normal: Self) -> Self {
+        *self - normal * 2. * self.dot(&normal)
     }
 }
 
@@ -283,5 +292,21 @@ mod tests {
         let v2 = vector!(2., 3., 4.);
         assert_eq!(vector!(-1., 2., -1.), v.cross(&v2));
         assert_eq!(vector!(1., -2., 1.), v2.cross(&v));
+    }
+
+    #[test]
+    fn tuple_reflecting_vector_approaching_at_45_deg() {
+        let v = vector!(1., -1., 0.);
+        let n = vector!(0., 1., 0.);
+        let r = v.reflect(n);
+        assert_eq!(vector!(1., 1., 0.), r);
+    }
+
+    #[test]
+    fn tuple_reflecting_vector_off_slanted_surface() {
+        let v = vector!(0., -1., 0.);
+        let n = vector!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.);
+        let r = v.reflect(n);
+        assert_eq!(vector!(1., 0., 0.), r);
     }
 }
