@@ -1,7 +1,7 @@
 use crate::{
     color,
-    color::{Color, WHITE},
-    intersection::Intersection,
+    color::{Color, BLACK, WHITE},
+    intersection::{Intersection, PreparedComputations},
     light::PointLight,
     material::Material,
     matrix::Matrix,
@@ -42,6 +42,25 @@ impl World {
         result.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
         result
     }
+
+    pub fn shade_hit(&self, comps: &PreparedComputations) -> Color {
+        comps
+            .object
+            .material()
+            .lightning(&self.light, comps.point, comps.eyev, comps.normalv)
+    }
+
+    pub fn color_at(&self, r: Ray) -> Color {
+        let xs = self.intersect(r);
+        let hit = xs.iter().find(|i| i.t >= 0.);
+        match hit {
+            Some(i) => {
+                let comps = i.prepare_computations(&r);
+                self.shade_hit(&comps)
+            }
+            None => BLACK,
+        }
+    }
 }
 
 impl Default for World {
@@ -65,9 +84,8 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ray, tuple::Tuple, vector};
-
     use super::*;
+    use crate::{intersection, ray, tuple::Tuple, vector};
 
     #[test]
     fn world_intersect_with_ray() {
@@ -81,5 +99,30 @@ mod tests {
         assert_eq!(4.5, xs[1].t);
         assert_eq!(5.5, xs[2].t);
         assert_eq!(6., xs[3].t);
+    }
+
+    #[test]
+    fn world_shading_an_intersection() {
+        let w = World::default();
+        let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
+        let s = &w.objects[0];
+        let i = intersection!(4., s);
+        let comps = i.prepare_computations(&r);
+        let c = w.shade_hit(&comps);
+        assert_eq!(color!(0.38066, 0.47583, 0.2855), c);
+    }
+
+    #[test]
+    fn world_color_intersection_behind_ray() {
+        let mut w = World::default();
+        let outer = &mut w.objects[0];
+        outer.set_material(outer.material().with_ambient(1.));
+        let inner = &mut w.objects[1];
+        let inner_color = inner.material().color;
+        inner.set_material(inner.material().with_ambient(1.));
+
+        let r = ray!(point!(0., 0., 0.75), vector!(0., 0., -1.));
+        let c = &w.color_at(r);
+        assert_eq!(inner_color, *c);
     }
 }

@@ -1,4 +1,4 @@
-use crate::shapes::Shape;
+use crate::{ray::Ray, shapes::Shape, tuple::Tuple};
 
 #[macro_export]
 macro_rules! intersection {
@@ -11,6 +11,15 @@ macro_rules! intersection {
 pub struct Intersection<'a> {
     pub t: f64,
     pub object: &'a Shape,
+}
+
+pub struct PreparedComputations<'a> {
+    pub t: f64,
+    pub object: &'a Shape,
+    pub point: Tuple,
+    pub eyev: Tuple,
+    pub normalv: Tuple,
+    pub inside: bool,
 }
 
 impl Intersection<'_> {
@@ -42,13 +51,32 @@ impl Intersection<'_> {
         //         None => Some(i),
         //     })
     }
+
+    pub fn prepare_computations(&self, r: &Ray) -> PreparedComputations {
+        let point = r.position(self.t);
+        let eyev = -r.direction;
+        let normalv = self.object.normal_at(point);
+        let (inside, normalv) = if normalv.dot(&eyev) < 0. {
+            (true, -normalv)
+        } else {
+            (false, normalv)
+        };
+        PreparedComputations {
+            t: self.t,
+            object: self.object,
+            point,
+            eyev,
+            normalv,
+            inside,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::shapes::Sphere;
-    use crate::sphere;
+    use crate::{point, sphere, vector};
+    use crate::{ray, shapes::Sphere};
 
     #[test]
     fn intersection_ctor() {
@@ -106,5 +134,46 @@ mod tests {
 
         let i = Intersection::hit(xs);
         assert_eq!(Some(intersection!(2., shape)), i);
+    }
+
+    #[test]
+    fn intersection_precompute() {
+        let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
+        let sphere = sphere!();
+        let shape = Shape::Sphere(sphere);
+        let i = Intersection::new(4., &shape);
+        let comps = i.prepare_computations(&r);
+        assert_eq!(i.t, comps.t);
+        assert!(i.object == comps.object);
+        assert_eq!(point!(0., 0., -1.), comps.point);
+        assert_eq!(vector!(0., 0., -1.), comps.eyev);
+        assert_eq!(vector!(0., 0., -1.), comps.normalv);
+    }
+
+    #[test]
+    fn intersection_outside() {
+        let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
+        let sphere = sphere!();
+        let shape = Shape::Sphere(sphere);
+        let i = Intersection::new(4., &shape);
+        let comps = i.prepare_computations(&r);
+        assert_eq!(i.t, comps.t);
+        assert!(i.object == comps.object);
+        assert!(!comps.inside);
+    }
+
+    #[test]
+    fn intersection_inside() {
+        let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
+        let sphere = sphere!();
+        let shape = Shape::Sphere(sphere);
+        let i = Intersection::new(1., &shape);
+        let comps = i.prepare_computations(&r);
+        assert_eq!(i.t, comps.t);
+        assert!(i.object == comps.object);
+        assert_eq!(point!(0., 0., 1.), comps.point);
+        assert_eq!(vector!(0., 0., -1.), comps.eyev);
+        assert!(comps.inside);
+        assert_eq!(vector!(0., 0., -1.), comps.normalv);
     }
 }

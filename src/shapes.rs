@@ -47,6 +47,12 @@ impl Shape {
             Shape::Sphere(s) => s.material,
         }
     }
+
+    pub fn set_material(&mut self, material: Material) {
+        match self {
+            Shape::Sphere(s) => s.set_material(material),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
