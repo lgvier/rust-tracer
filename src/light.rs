@@ -24,12 +24,11 @@ impl PointLight {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{color::WHITE, point};
 
-    use super::*;
-
     #[test]
-    fn point_has_position_and_intensity() {
+    fn point_light_has_position_and_intensity() {
         let intensity = WHITE;
         let position = point!();
         let light = point_light!(position, intensity);
