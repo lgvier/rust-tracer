@@ -229,7 +229,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn matrix_ctor() {
+    fn ctor() {
         let m = Matrix::new(
             [1., 2., 3., 4.],
             [5.5, 6.5, 7.5, 8.5],
@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_macros() {
+    fn macros() {
         let m = matrix2![];
         let expected = Matrix::empty(2);
         assert_eq!(expected, m);
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_eq() {
+    fn eq() {
         let m = matrix![
             1., 2., 3., 4.;
             5.5, 6.5, 7.5, 8.5;
@@ -314,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_mul() {
+    fn mul() {
         let m = matrix![
             1., 2., 3., 4.;
             5., 6., 7., 8.;
@@ -337,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_tuple_mul() {
+    fn tuple_mul() {
         let m = matrix![
             1., 2., 3., 4.;
             2., 4., 4., 2.;
@@ -349,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_identity() {
+    fn identity() {
         let m = matrix![
             1., 2., 3., 4.;
             2., 4., 4., 2.;
@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_transpose() {
+    fn transpose() {
         let m = matrix![
             0., 9., 3., 0.;
             9., 8., 0., 8.;
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_determinant_2x2() {
+    fn determinant_2x2() {
         let m = matrix2![
             1., 5.;
             -3., 2.];
@@ -387,7 +387,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_submatrix() {
+    fn submatrix() {
         let m = matrix3![
             1., 5., 0.;
             -3., 2., 7.;
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_minor() {
+    fn minor() {
         let m = matrix3![
             3., 5., 0.;
             2., -1., -7.;
@@ -414,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_cofactor() {
+    fn cofactor() {
         let m = matrix3![
             3., 5., 0.;
             2., -1., -7.;
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_determinant_3x3() {
+    fn determinant_3x3() {
         let m = matrix3![
             1., 2., 6.;
             -5., 8., -4.;
@@ -438,7 +438,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_determinant_4x4() {
+    fn determinant_4x4() {
         let m = matrix![
             -2., -8., 3., 5.;
             -3., 1., 7., 3.;
@@ -453,7 +453,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_is_invertible() {
+    fn is_invertible() {
         let m = matrix![
             6., 4., 4., 4.;
             5., 5., 7., 6.;
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_inverse() {
+    fn inverse() {
         let m = matrix![
             -5., 2., 6., -8.;
             1., -5., 1., 8.;

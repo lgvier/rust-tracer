@@ -99,6 +99,19 @@ impl Matrix {
             zx, zy, 1., 0.;
             0., 0., 0., 1.]
     }
+    pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Self {
+        let forward = (to - from).normalize();
+        let upn = up.normalize();
+        let left = forward.cross(&upn);
+        let true_up = left.cross(&forward);
+        let orientation = matrix![
+            left.x, left.y, left.z, 0.;
+            true_up.x, true_up.y, true_up.z, 0.;
+            -forward.x, -forward.y, -forward.z, 0.;
+            0., 0., 0., 1.
+        ];
+        orientation * Matrix::translation(-from.x, -from.y, -from.z)
+    }
 }
 
 #[cfg(test)]
@@ -109,7 +122,7 @@ mod tests {
     use std::f64::consts::PI;
 
     #[test]
-    fn transform_translation() {
+    fn translation() {
         let t = Matrix::translation(5., -3., 2.);
         let p = point!(-3., 4., 5.);
         assert_eq!(point!(2., 1., 7.), t * p);
@@ -124,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_scaling() {
+    fn scaling() {
         let t = Matrix::scaling(2., 3., 4.);
         let p = point!(-4., 6., 8.);
         assert_eq!(point!(-8., 18., 32.), t * p);
@@ -137,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_rotation_x() {
+    fn rotation_x() {
         let p = point!(0., 1., 0.);
         let half_quarter = Matrix::rotation_x(PI / 4.);
         let full_quarter = Matrix::rotation_x(PI / 2.);
@@ -152,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_rotation_y() {
+    fn rotation_y() {
         let p = point!(0., 0., 1.);
         let half_quarter = Matrix::rotation_y(PI / 4.);
         let full_quarter = Matrix::rotation_y(PI / 2.);
@@ -167,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_rotation_z() {
+    fn rotation_z() {
         let p = point!(0., 1., 0.);
         let half_quarter = Matrix::rotation_z(PI / 4.);
         let full_quarter = Matrix::rotation_z(PI / 2.);
@@ -182,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_shearing() {
+    fn shearing() {
         let p = point!(2., 3., 4.);
         {
             // x in proportion to y
@@ -217,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_chaining() {
+    fn chaining() {
         let p = point!(1., 0., 1.);
         let a = Matrix::rotation_x(PI / 2.);
         let b = Matrix::scaling(5., 5., 5.);
@@ -246,7 +259,7 @@ mod tests {
     }
 
     #[test]
-    fn transform_ray_translation() {
+    fn ray_translation() {
         let r = ray!(1., 2., 3.; 0., 1., 0.);
         let r2 = r.translated(3., 4., 5.);
 
@@ -255,11 +268,53 @@ mod tests {
     }
 
     #[test]
-    fn transform_ray_scaling() {
+    fn ray_scaling() {
         let r = ray!(1., 2., 3.; 0., 1., 0.);
         let r2 = r.scaled(2., 3., 4.);
 
         assert_eq!(point!(2., 6., 12.), r2.origin);
         assert_eq!(vector!(0., 3., 0.), r2.direction);
+    }
+
+    #[test]
+    fn matrix_for_default_orientation() {
+        let from = point!(0., 0., 0.);
+        let to = point!(0., 0., -1.);
+        let up = point!(0., 1., 0.);
+        let t = Matrix::view_transform(from, to, up);
+        assert_eq!(IDENTITY_MATRIX, t);
+    }
+
+    #[test]
+    fn view_transformation_looking_positive_z_direction() {
+        let from = point!(0., 0., 0.);
+        let to = point!(0., 0., 1.);
+        let up = point!(0., 1., 0.);
+        let t = Matrix::view_transform(from, to, up);
+        assert_eq!(Matrix::scaling(-1., 1., -1.), t);
+    }
+
+    #[test]
+    fn view_transformation_moves_the_world() {
+        let from = point!(0., 0., 8.);
+        let to = point!(0., 0., 0.);
+        let up = point!(0., 1., 0.);
+        let t = Matrix::view_transform(from, to, up);
+        assert_eq!(Matrix::translation(0., 0., -8.), t);
+    }
+
+    #[test]
+    fn arbitrary_view_transformation() {
+        let from = point!(1., 3., 2.);
+        let to = point!(4., -2., 8.);
+        let up = point!(1., 1., 0.);
+        let t = Matrix::view_transform(from, to, up);
+        assert_eq!(
+            matrix![-0.50709, 0.50709, 0.67612, -2.36643;
+                    0.76772, 0.60609,  0.12122, -2.82843;
+                    -0.35857, 0.59761, -0.71714,  0.00000;
+                    0.00000, 0.00000,  0.00000,  1.00000],
+            t
+        );
     }
 }

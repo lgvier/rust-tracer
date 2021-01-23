@@ -173,7 +173,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tuple_is_point() {
+    fn is_point() {
         let p = Tuple::new(4.3, -4.2, 3.1, 1.);
 
         assert_eq!(4.3, p.x);
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_is_vector() {
+    fn is_vector() {
         let v = Tuple::new(4.3, -4.2, 3.1, 0.);
 
         assert_eq!(4.3, v.x);
@@ -216,20 +216,20 @@ mod tests {
     }
 
     #[test]
-    fn tuple_eq() {
+    fn eq() {
         let p = point!(4.3, -4.2, 3.1);
         let p2 = point!(4.3, -4.2, 3.1);
         assert_eq!(p, p2);
     }
     #[test]
-    fn tuple_ne() {
+    fn ne() {
         let p = point!(4.3, -4.2, 3.1);
         let v = vector!(4.3, -4.2, 3.1);
         assert_ne!(p, v);
     }
 
     #[test]
-    fn tuple_add() {
+    fn add() {
         let p = point!(1., 2., 3.);
         let v = vector!(1., 2., 3.);
         let result = p + v;
@@ -237,33 +237,33 @@ mod tests {
     }
 
     #[test]
-    fn tuple_sub() {
+    fn sub() {
         let p = point!(1., 2., 3.);
         let p2 = point!(1., 2., 3.);
         let result = p - p2;
         assert_eq!(vector!(0., 0., 0.), result);
     }
     #[test]
-    fn tuple_neg() {
+    fn neg() {
         let t = point!(1., 2., 3.);
         let result = -t;
         assert_eq!(Tuple::new(-1., -2., -3., -1.), result);
     }
 
     #[test]
-    fn tuple_mul() {
+    fn mul() {
         let v = vector!(1., 2., 3.);
         let result = v * 2.;
         assert_eq!(vector!(2., 4., 6.), result);
     }
     #[test]
-    fn tuple_div() {
+    fn div() {
         let v = vector!(1., 2., 3.);
         let result = v / 2.;
         assert_eq!(vector!(0.5, 1., 1.5), result);
     }
     #[test]
-    fn tuple_mag() {
+    fn magnitude() {
         let v = vector!(1., 0., 0.);
         assert_eq!(1., v.magnitude());
         let v = vector!(1., 2., 3.);
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_norm() {
+    fn normalize() {
         let v = vector!(4., 0., 0.);
         assert_eq!(vector!(1., 0., 0.), v.normalize());
         let v = vector!(1., 2., 3.);
@@ -280,14 +280,14 @@ mod tests {
     }
 
     #[test]
-    fn tuple_dot_product() {
+    fn dot_product() {
         let v = vector!(1., 2., 3.);
         let v2 = vector!(2., 3., 4.);
         assert_eq!(20., v.dot(&v2));
     }
 
     #[test]
-    fn tuple_cross_product() {
+    fn cross_product() {
         let v = vector!(1., 2., 3.);
         let v2 = vector!(2., 3., 4.);
         assert_eq!(vector!(-1., 2., -1.), v.cross(&v2));
@@ -295,7 +295,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_reflecting_vector_approaching_at_45_deg() {
+    fn reflecting_vector_approaching_at_45_deg() {
         let v = vector!(1., -1., 0.);
         let n = vector!(0., 1., 0.);
         let r = v.reflect(n);
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_reflecting_vector_off_slanted_surface() {
+    fn reflecting_vector_off_slanted_surface() {
         let v = vector!(0., -1., 0.);
         let n = vector!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.);
         let r = v.reflect(n);

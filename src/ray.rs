@@ -48,7 +48,7 @@ mod tests {
     use crate::{point, vector};
 
     #[test]
-    fn ray_ctor() {
+    fn ctor() {
         let origin = point!(1., 2., 3.);
         let direction = vector!(4., 5., 6.);
         let r = Ray::new(origin, direction);
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn ray_compute_point_from_distance() {
+    fn compute_point_from_distance() {
         let r = ray!(2., 3., 4.; 1., 0., 0.);
         assert_eq!(point!(2., 3., 4.), r.position(0.));
         assert_eq!(point!(3., 3., 4.), r.position(1.));

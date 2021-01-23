@@ -108,7 +108,7 @@ mod tests {
     use crate::{color, point, point_light, vector};
 
     #[test]
-    fn material_default() {
+    fn default() {
         let material = Material::default();
         assert_eq!(WHITE, material.color);
         assert_eq!(0.1, material.ambient);
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn material_lightning_eye_between_light_and_surface() {
+    fn lightning_eye_between_light_and_surface() {
         let material = Material::default();
         let position = point!(0., 0., 0.);
 
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn material_lightning_eye_between_light_and_surface_eye_offset_45_deg() {
+    fn lightning_eye_between_light_and_surface_eye_offset_45_deg() {
         let material = Material::default();
         let position = point!(0., 0., 0.);
 
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn material_lightning_eye_opposite_surface_light_offset_45_deg() {
+    fn lightning_eye_opposite_surface_light_offset_45_deg() {
         let material = Material::default();
         let position = point!(0., 0., 0.);
 
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn material_lightning_eye_in_path_of_reflecting_vector() {
+    fn lightning_eye_in_path_of_reflecting_vector() {
         let material = Material::default();
         let position = point!(0., 0., 0.);
 
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn material_lightning_light_behind_surface() {
+    fn lightning_light_behind_surface() {
         let material = Material::default();
         let position = point!(0., 0., 0.);
 

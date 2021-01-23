@@ -88,7 +88,7 @@ mod tests {
     use crate::{intersection, ray, tuple::Tuple, vector};
 
     #[test]
-    fn world_intersect_with_ray() {
+    fn intersect_with_ray() {
         let w = World::default();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let xs = w.intersect(r);
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn world_shading_an_intersection() {
+    fn shading_an_intersection() {
         let w = World::default();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = &w.objects[0];
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn world_color_intersection_behind_ray() {
+    fn color_intersection_behind_ray() {
         let mut w = World::default();
         let outer = &mut w.objects[0];
         outer.set_material(outer.material().with_ambient(1.));

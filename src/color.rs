@@ -98,7 +98,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn color_ctor() {
+    fn ctor() {
         let c = Color::new(0., 0., 1.);
         assert_eq!(0., c.r);
         assert_eq!(0., c.g);
@@ -106,20 +106,20 @@ mod tests {
     }
 
     #[test]
-    fn color_eq() {
+    fn eq() {
         let c = Color::new(0.9, 0.6, 0.75);
         let c2 = Color::new(0.9, 0.6, 0.75);
         assert_eq!(c, c2);
     }
     #[test]
-    fn color_ne() {
+    fn ne() {
         let c = Color::new(0.9, 0.6, 0.75);
         let c2 = Color::new(0.7, 0.1, 0.25);
         assert_ne!(c, c2);
     }
 
     #[test]
-    fn color_add() {
+    fn add() {
         let c = Color::new(0.9, 0.6, 0.75);
         let c2 = Color::new(0.7, 0.1, 0.25);
         let result = c + c2;
@@ -127,14 +127,14 @@ mod tests {
     }
 
     #[test]
-    fn color_sub() {
+    fn sub() {
         let c = Color::new(0.9, 0.6, 0.75);
         let c2 = Color::new(0.7, 0.1, 0.25);
         let result = c - c2;
         assert_eq!(Color::new(0.2, 0.5, 0.5), result);
     }
     #[test]
-    fn color_mul() {
+    fn mul() {
         let c = Color::new(0.2, 0.3, 0.4);
         assert_eq!(Color::new(0.4, 0.6, 0.8), c * 2.);
         assert_eq!(Color::new(0.1, 0.3, 0.04), c * Color::new(0.5, 1., 0.1));

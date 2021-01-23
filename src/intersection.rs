@@ -79,7 +79,7 @@ mod tests {
     use crate::{ray, shapes::Sphere};
 
     #[test]
-    fn intersection_ctor() {
+    fn ctor() {
         let s = sphere!();
         let shape = &Shape::Sphere(s);
         let i = Intersection::new(3.5, shape);
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_hit_positive() {
+    fn hit_positive() {
         let s = sphere!();
         let shape = &Shape::Sphere(s);
         let i1 = intersection!(1., shape);
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_hit_negative() {
+    fn hit_negative() {
         let s = sphere!();
         let shape = &Shape::Sphere(s);
         let i1 = intersection!(-1., shape);
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_hit_all_negative() {
+    fn hit_all_negative() {
         let s = sphere!();
         let shape = &Shape::Sphere(s);
         let i1 = intersection!(-2., shape);
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(None, i);
     }
     #[test]
-    fn intersection_hit_lowest_non_negative() {
+    fn hit_lowest_non_negative() {
         let s = sphere!();
         let shape = &Shape::Sphere(s);
         let i1 = intersection!(5., shape);
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_precompute() {
+    fn precompute() {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let sphere = sphere!();
         let shape = Shape::Sphere(sphere);
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_outside() {
+    fn outside() {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let sphere = sphere!();
         let shape = Shape::Sphere(sphere);
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_inside() {
+    fn inside() {
         let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
         let sphere = sphere!();
         let shape = Shape::Sphere(sphere);

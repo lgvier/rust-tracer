@@ -60,7 +60,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn canvas_ctor() {
+    fn ctor() {
         let c = Canvas::new(10, 20);
         assert_eq!(10, c.width);
         assert_eq!(20, c.height);
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_write() {
+    fn write() {
         let mut c = Canvas::new(10, 20);
         assert_eq!(10, c.width);
         assert_eq!(20, c.height);
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn canvas_save() -> Result<()> {
+    fn save() -> Result<()> {
         let mut c = Canvas::new(10, 20);
         c.write_pixel(1, 1, RED);
         c.write_pixel(1, 2, GREEN);
@@ -108,7 +108,7 @@ mod tests {
         assert_eq!(0, pixels[(6 + c.width * 1) * 3 + 1]);
         assert_eq!(255, pixels[(6 + c.width * 1) * 3 + 2]);
 
-        // c.save("/tmp/canvas_save_test.png")?;
+        // c.save("/tmp/save_test.png")?;
         Ok(())
     }
 }
