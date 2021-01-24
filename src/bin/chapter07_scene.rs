@@ -80,14 +80,7 @@ fn main() -> std::io::Result<()> {
 
     let world = World::new(
         light_source,
-        vec![
-            Shape::Sphere(floor),
-            Shape::Sphere(left_wall),
-            Shape::Sphere(right_wall),
-            Shape::Sphere(middle),
-            Shape::Sphere(left),
-            Shape::Sphere(right),
-        ],
+        vec![floor, left_wall, right_wall, middle, left, right],
     );
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);

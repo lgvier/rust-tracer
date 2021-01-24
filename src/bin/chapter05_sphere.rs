@@ -21,12 +21,11 @@ fn main() -> std::io::Result<()> {
 
     let mut c = Canvas::new(canvas_pixels, canvas_pixels);
 
-    let mut sphere = sphere!();
+    let mut shape = sphere!();
     // sphere.set_transform(Matrix::scaling(1., 0.5, 1.));
     //sphere.set_transform(Matrix::scaling(0.5, 1., 1.));
-    sphere.set_transform(Matrix::rotation_z(PI / 4.) * Matrix::scaling(0.5, 1., 1.));
+    shape.set_transform(Matrix::rotation_z(PI / 4.) * Matrix::scaling(0.5, 1., 1.));
     //sphere.set_transform(Matrix::shearing(1., 0., 0., 0., 0., 0.) * Matrix::scaling(0.5, 1., 1.));
-    let shape = &Shape::Sphere(sphere);
 
     for y in 0..canvas_pixels {
         let world_y = half - pixel_size * y as f64;

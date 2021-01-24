@@ -24,10 +24,10 @@ fn main() -> std::io::Result<()> {
 
     let mut c = Canvas::new(canvas_pixels, canvas_pixels);
 
-    let mut sphere = sphere!();
+    let mut shape = sphere!();
     //sphere.set_transform(Matrix::scaling(1., 0.5, 1.));
     //sphere.set_transform(Matrix::scaling(0.5, 1., 1.));
-    sphere.set_transform(Matrix::rotation_z(PI / 4.) * Matrix::scaling(0.5, 1., 1.));
+    shape.set_transform(Matrix::rotation_z(PI / 4.) * Matrix::scaling(0.5, 1., 1.));
     //sphere.set_transform(Matrix::shearing(1., 0., 0., 0., 0., 0.) * Matrix::scaling(0.5, 1., 1.));
 
     let material = MaterialBuilder::default()
@@ -35,9 +35,7 @@ fn main() -> std::io::Result<()> {
         .ambient(0.2)
         .build()
         .unwrap();
-    sphere.set_material(material);
-
-    let shape = &Shape::Sphere(sphere);
+    shape.set_material(material);
 
     let light_position = point!(-10., 10., -10.);
     let light_color = WHITE;

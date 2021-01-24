@@ -79,7 +79,7 @@ impl Default for World {
         let mut s2 = sphere!();
         s2.set_transform(Matrix::scaling(0.5, 0.5, 0.5));
 
-        World::new(light, vec![Shape::Sphere(s1), Shape::Sphere(s2)])
+        World::new(light, vec![s1, s2])
     }
 }
 

@@ -10,9 +10,14 @@ use crate::{
 #[macro_export]
 macro_rules! sphere {
     () => {
-        Sphere::new()
+        Shape::Sphere(Sphere::new())
     };
 }
+
+/*
+enum vs boxed trait polymorphism:
+https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
+*/
 
 #[derive(Debug, PartialEq)]
 pub enum Shape {
@@ -33,6 +38,12 @@ impl Shape {
             .map(|e| Intersection::new(*e, self))
             .collect();
         Intersection::hit(xs)
+    }
+
+    pub fn set_transform(&mut self, transform: Matrix) {
+        match self {
+            Shape::Sphere(s) => s.set_transform(transform),
+        }
     }
 
     pub fn normal_at(&self, p: Tuple) -> Tuple {
@@ -159,7 +170,7 @@ mod tests {
 
     #[test]
     fn sphere_set_transform() {
-        let mut s = sphere!();
+        let mut s = Sphere::new();
         let t = Matrix::translation(2., 3., 4.);
         s.set_transform(t);
         assert_eq!(t, s.transform);
@@ -242,13 +253,13 @@ mod tests {
     #[test]
     fn sphere_has_a_default_material() {
         let s = sphere!();
-        assert_eq!(Material::default(), s.material);
+        assert_eq!(Material::default(), *s.material());
     }
 
     #[test]
     fn sphere_set_material() {
         let mut s = sphere!();
         s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
-        assert_eq!(1., s.material.ambient);
+        assert_eq!(1., s.material().ambient);
     }
 }

@@ -74,42 +74,38 @@ mod tests {
     #[test]
     fn ctor() {
         let s = sphere!();
-        let shape = &Shape::Sphere(s);
-        let i = Intersection::new(3.5, shape);
+        let i = Intersection::new(3.5, &s);
         assert_eq!(3.5, i.t);
-        assert!(shape == i.object);
+        assert!(&s == i.object);
     }
 
     #[test]
     fn hit_positive() {
         let s = sphere!();
-        let shape = &Shape::Sphere(s);
-        let i1 = Intersection::new(1., shape);
-        let i2 = Intersection::new(2., shape);
+        let i1 = Intersection::new(1., &s);
+        let i2 = Intersection::new(2., &s);
         let xs = vec![i2, i1];
 
         let i = Intersection::hit(xs);
-        assert_eq!(Some(Intersection::new(1., shape)), i);
+        assert_eq!(Some(Intersection::new(1., &s)), i);
     }
 
     #[test]
     fn hit_negative() {
         let s = sphere!();
-        let shape = &Shape::Sphere(s);
-        let i1 = Intersection::new(-1., shape);
-        let i2 = Intersection::new(2., shape);
+        let i1 = Intersection::new(-1., &s);
+        let i2 = Intersection::new(2., &s);
         let xs = vec![i2, i1];
 
         let i = Intersection::hit(xs);
-        assert_eq!(Some(Intersection::new(2., shape)), i);
+        assert_eq!(Some(Intersection::new(2., &s)), i);
     }
 
     #[test]
     fn hit_all_negative() {
         let s = sphere!();
-        let shape = &Shape::Sphere(s);
-        let i1 = Intersection::new(-2., shape);
-        let i2 = Intersection::new(-1., shape);
+        let i1 = Intersection::new(-2., &s);
+        let i2 = Intersection::new(-1., &s);
         let xs = vec![i2, i1];
 
         let i = Intersection::hit(xs);
@@ -118,23 +114,21 @@ mod tests {
     #[test]
     fn hit_lowest_non_negative() {
         let s = sphere!();
-        let shape = &Shape::Sphere(s);
-        let i1 = Intersection::new(5., shape);
-        let i2 = Intersection::new(7., shape);
-        let i3 = Intersection::new(-3., shape);
-        let i4 = Intersection::new(2., shape);
+        let i1 = Intersection::new(5., &s);
+        let i2 = Intersection::new(7., &s);
+        let i3 = Intersection::new(-3., &s);
+        let i4 = Intersection::new(2., &s);
         let xs = vec![i1, i2, i3, i4];
 
         let i = Intersection::hit(xs);
-        assert_eq!(Some(Intersection::new(2., shape)), i);
+        assert_eq!(Some(Intersection::new(2., &s)), i);
     }
 
     #[test]
     fn precompute() {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
-        let sphere = sphere!();
-        let shape = Shape::Sphere(sphere);
-        let i = Intersection::new(4., &shape);
+        let s = sphere!();
+        let i = Intersection::new(4., &s);
         let comps = i.prepare_computations(&r);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
@@ -146,9 +140,8 @@ mod tests {
     #[test]
     fn outside() {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
-        let sphere = sphere!();
-        let shape = Shape::Sphere(sphere);
-        let i = Intersection::new(4., &shape);
+        let s = sphere!();
+        let i = Intersection::new(4., &s);
         let comps = i.prepare_computations(&r);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
@@ -158,9 +151,8 @@ mod tests {
     #[test]
     fn inside() {
         let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
-        let sphere = sphere!();
-        let shape = Shape::Sphere(sphere);
-        let i = Intersection::new(1., &shape);
+        let s = sphere!();
+        let i = Intersection::new(1., &s);
         let comps = i.prepare_computations(&r);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
