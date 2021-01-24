@@ -41,7 +41,7 @@ impl Mul<Matrix> for Ray {
     }
 }
 
-impl<'a> Mul<Matrix> for &'a Ray {
+impl Mul<Matrix> for &Ray {
     type Output = Ray;
 
     fn mul(self, other: Matrix) -> Ray {
