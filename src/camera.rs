@@ -6,6 +6,7 @@ use crate::{
     tuple::Tuple,
     world::World,
 };
+use std::time::Instant;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
@@ -65,13 +66,23 @@ impl Camera {
 
     pub fn render(&self, world: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
+        let start = Instant::now();
         for y in 0..self.vsize {
+            if y > 0 && y % (self.vsize / 20) == 0 {
+                println!(
+                    "Camera::render() y: {} of {}, elapsed time: {:?}",
+                    y,
+                    self.vsize,
+                    start.elapsed()
+                );
+            }
             for x in 0..self.hsize {
                 let ray = self.ray_for_pixel(x, y);
                 let color = world.color_at(ray);
                 image.write_pixel(x, y, color);
             }
         }
+        println!("Camera::render() completed in {:?}", start.elapsed());
         image
     }
 }
