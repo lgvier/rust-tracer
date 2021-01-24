@@ -35,7 +35,7 @@ fn main() -> std::io::Result<()> {
             let position = point!(world_x, world_y, wall_z);
 
             let r = ray!(ray_origin, (position - ray_origin).normalize());
-            let xs = shape.hit(r);
+            let xs = shape.hit(&r);
 
             if xs.is_some() {
                 c.write_pixel(x, y, RED);

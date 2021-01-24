@@ -224,6 +224,14 @@ impl Mul<Ray> for Matrix {
     }
 }
 
+impl<'a> Mul<&'a Ray> for Matrix {
+    type Output = Ray;
+
+    fn mul(self, other: &'a Ray) -> Ray {
+        other * self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

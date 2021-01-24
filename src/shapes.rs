@@ -21,13 +21,13 @@ pub enum Shape {
 }
 
 impl Shape {
-    pub fn intersect<'a>(&'a self, r: Ray) -> Vec<f64> {
+    pub fn intersect<'a>(&'a self, r: &Ray) -> Vec<f64> {
         match self {
             Shape::Sphere(s) => s.intersect(r),
         }
     }
 
-    pub fn hit<'a>(&'a self, r: Ray) -> Option<Intersection> {
+    pub fn hit<'a>(&'a self, r: &Ray) -> Option<Intersection> {
         let xs = self
             .intersect(r)
             .iter()
@@ -68,7 +68,8 @@ impl Sphere {
             material: Material::default(),
         }
     }
-    pub fn intersect(&self, r: Ray) -> Vec<f64> {
+
+    pub fn intersect(&self, r: &Ray) -> Vec<f64> {
         let obj_ray = r * self.transform.inverse().unwrap();
         let sphere_to_ray = obj_ray.origin - point!();
         let a = obj_ray.direction.dot(&obj_ray.direction);
@@ -113,7 +114,7 @@ mod tests {
     fn sphere_ray_intersects_at_two_pts() {
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
         assert_eq!(4., xs[0]);
         assert_eq!(6., xs[1]);
@@ -123,7 +124,7 @@ mod tests {
     fn sphere_ray_intersects_tangent() {
         let r = ray!(0., 1., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
         assert_eq!(5., xs[0]);
         assert_eq!(5., xs[1]);
@@ -133,7 +134,7 @@ mod tests {
     fn sphere_ray_misses() {
         let r = ray!(0., 2., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert!(xs.is_empty());
     }
 
@@ -141,7 +142,7 @@ mod tests {
     fn sphere_ray_within() {
         let r = ray!(0., 0., 0.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
         assert_eq!(-1., xs[0]);
         assert_eq!(1., xs[1]);
@@ -151,7 +152,7 @@ mod tests {
     fn sphere_ray_behind() {
         let r = ray!(0., 0., 5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
         assert_eq!(-6., xs[0]);
         assert_eq!(-4., xs[1]);
@@ -170,7 +171,7 @@ mod tests {
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::scaling(2., 2., 2.));
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
         assert_eq!(3., xs[0]);
         assert_eq!(7., xs[1]);
@@ -181,7 +182,7 @@ mod tests {
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::translation(5., 0., 0.));
-        let xs = s.intersect(r);
+        let xs = s.intersect(&r);
         assert!(xs.is_empty());
     }
 

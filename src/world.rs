@@ -22,7 +22,7 @@ impl World {
         Self { light, objects }
     }
 
-    pub fn intersect(&self, r: Ray) -> Vec<Intersection> {
+    pub fn intersect(&self, r: &Ray) -> Vec<Intersection> {
         // self.objects
         //     .iter()
         //     .flat_map(|object| {
@@ -51,7 +51,7 @@ impl World {
     }
 
     pub fn color_at(&self, r: Ray) -> Color {
-        let xs = self.intersect(r);
+        let xs = self.intersect(&r);
         let hit = xs.iter().find(|i| i.t >= 0.);
         match hit {
             Some(i) => {
@@ -91,7 +91,7 @@ mod tests {
     fn intersect_with_ray() {
         let w = World::default();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
-        let xs = w.intersect(r);
+        let xs = w.intersect(&r);
         println!("xs length: {:?}", xs.len());
         println!("xs: {:?}", xs);
         assert_eq!(4, xs.len());

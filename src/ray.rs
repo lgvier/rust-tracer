@@ -14,7 +14,7 @@ macro_rules! ray {
     };
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Ray {
     pub origin: Tuple,
     pub direction: Tuple,
@@ -32,6 +32,17 @@ impl Ray {
 }
 
 impl Mul<Matrix> for Ray {
+    type Output = Ray;
+
+    fn mul(self, other: Matrix) -> Ray {
+        Ray {
+            origin: self.origin * other,
+            direction: self.direction * other,
+        }
+    }
+}
+
+impl<'a> Mul<Matrix> for &'a Ray {
     type Output = Ray;
 
     fn mul(self, other: Matrix) -> Ray {

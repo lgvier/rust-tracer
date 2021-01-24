@@ -3,7 +3,6 @@ use std::io::{BufWriter, Result};
 
 use crate::color::*;
 
-#[derive(Debug, Clone)]
 pub struct Canvas {
     pub width: usize,
     pub height: usize,

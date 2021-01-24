@@ -7,7 +7,6 @@ macro_rules! point_light {
     };
 }
 
-#[derive(Clone, Copy, Debug)]
 pub struct PointLight {
     pub position: Tuple,
     pub intensity: Color,

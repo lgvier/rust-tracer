@@ -8,7 +8,6 @@ use crate::{
 };
 use std::time::Instant;
 
-#[derive(Clone, Copy, Debug)]
 pub struct Camera {
     pub hsize: usize,
     pub vsize: usize,
@@ -68,7 +67,7 @@ impl Camera {
         let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
         for y in 0..self.vsize {
-            if y > 0 && y % (self.vsize / 20) == 0 {
+            if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
                 println!(
                     "Camera::render() y: {} of {}, elapsed time: {:?}",
                     y,
