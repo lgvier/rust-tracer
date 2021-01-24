@@ -3,9 +3,9 @@ use rust_tracer::{
     color,
     color::{Color, WHITE},
     light::PointLight,
-    material::Material,
+    material::MaterialBuilder,
     matrix::Matrix,
-    point, point_light,
+    point,
     shapes::{Shape, Sphere},
     sphere,
     tuple::Tuple,
@@ -15,9 +15,11 @@ use rust_tracer::{
 use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
-    let floor_and_walls_material = Material::default()
-        .with_color(color!(1., 0.9, 0.9))
-        .with_specular(0.);
+    let floor_and_walls_material = MaterialBuilder::default()
+        .color(color!(1., 0.9, 0.9))
+        .specular(0.)
+        .build()
+        .unwrap();
 
     let mut floor = sphere!();
     floor.set_transform(Matrix::scaling(10., 0.01, 10.));
@@ -41,21 +43,40 @@ fn main() -> std::io::Result<()> {
     );
     right_wall.set_material(floor_and_walls_material);
 
-    let spheres_material = Material::default().with_diffuse(0.7).with_specular(0.3);
-
     let mut middle = sphere!();
     middle.set_transform(Matrix::translation(-0.5, 1., 0.5));
-    middle.set_material(spheres_material.with_color(color!(0.1, 1., 0.5)));
+    middle.set_material(
+        MaterialBuilder::default()
+            .diffuse(0.7)
+            .specular(0.3)
+            .color(color!(0.1, 1., 0.5))
+            .build()
+            .unwrap(),
+    );
 
     let mut left = sphere!();
     left.set_transform(Matrix::translation(-1.5, 0.33, -0.55) * Matrix::scaling(0.33, 0.33, 0.33));
-    left.set_material(spheres_material.with_color(color!(1., 0.8, 0.1)));
+    left.set_material(
+        MaterialBuilder::default()
+            .diffuse(0.7)
+            .specular(0.3)
+            .color(color!(1., 0.8, 0.1))
+            .build()
+            .unwrap(),
+    );
 
     let mut right = sphere!();
     right.set_transform(Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5));
-    right.set_material(spheres_material.with_color(color!(0.5, 1., 0.1)));
+    right.set_material(
+        MaterialBuilder::default()
+            .diffuse(0.7)
+            .specular(0.3)
+            .color(color!(0.5, 1., 0.1))
+            .build()
+            .unwrap(),
+    );
 
-    let light_source = point_light!(point!(-10., 10., -10.), WHITE);
+    let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
     let world = World::new(
         light_source,

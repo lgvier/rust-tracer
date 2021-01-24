@@ -5,9 +5,9 @@ use rust_tracer::{
     color,
     color::{Color, WHITE},
     light::PointLight,
-    material::Material,
+    material::MaterialBuilder,
     matrix::Matrix,
-    point, point_light, ray,
+    point, ray,
     ray::Ray,
     shapes::{Shape, Sphere},
     sphere,
@@ -30,16 +30,18 @@ fn main() -> std::io::Result<()> {
     sphere.set_transform(Matrix::rotation_z(PI / 4.) * Matrix::scaling(0.5, 1., 1.));
     //sphere.set_transform(Matrix::shearing(1., 0., 0., 0., 0., 0.) * Matrix::scaling(0.5, 1., 1.));
 
-    let material = Material::default()
-        .with_color(color!(1., 0.2, 1.))
-        .with_ambient(0.2);
+    let material = MaterialBuilder::default()
+        .color(color!(1., 0.2, 1.))
+        .ambient(0.2)
+        .build()
+        .unwrap();
     sphere.set_material(material);
 
     let shape = &Shape::Sphere(sphere);
 
     let light_position = point!(-10., 10., -10.);
     let light_color = WHITE;
-    let light = point_light!(light_position, light_color);
+    let light = PointLight::new(light_position, light_color);
 
     for y in 0..canvas_pixels {
         let world_y = half - pixel_size * y as f64;

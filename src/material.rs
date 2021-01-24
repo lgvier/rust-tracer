@@ -4,16 +4,6 @@ use crate::{
     tuple::Tuple,
 };
 
-// #[macro_export]
-// macro_rules! material {
-//     () => {
-//         DEFAULT_MATERIAL
-//     };
-//     ($color:expr, $ambient:expr, $diffuse:expr, $specular:expr, $shininess:expr) => {
-//         Material::new($color, $ambient, $diffuse, $specular, $shininess)
-//     };
-// }
-
 const DEFAULT_MATERIAL: Material = Material {
     color: WHITE,
     ambient: 0.1,
@@ -22,7 +12,8 @@ const DEFAULT_MATERIAL: Material = Material {
     shininess: 200.,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Builder)]
+#[builder(default)]
 pub struct Material {
     pub color: Color,
     pub ambient: f64,
@@ -40,26 +31,6 @@ impl Material {
             specular,
             shininess,
         }
-    }
-
-    pub fn with_color(self, color: Color) -> Self {
-        Self { color, ..self }
-    }
-
-    pub fn with_ambient(self, ambient: f64) -> Self {
-        Self { ambient, ..self }
-    }
-
-    pub fn with_diffuse(self, diffuse: f64) -> Self {
-        Self { diffuse, ..self }
-    }
-
-    pub fn with_specular(self, specular: f64) -> Self {
-        Self { specular, ..self }
-    }
-
-    pub fn with_shininess(self, shininess: f64) -> Self {
-        Self { shininess, ..self }
     }
 
     pub fn lightning(
@@ -105,7 +76,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{color, point, point_light, vector};
+    use crate::{color, point, vector};
 
     #[test]
     fn default() {
@@ -115,6 +86,11 @@ mod tests {
         assert_eq!(0.9, material.diffuse);
         assert_eq!(0.9, material.specular);
         assert_eq!(200., material.shininess);
+
+        let mut material = DEFAULT_MATERIAL;
+        material.ambient = 0.5;
+        assert_eq!(0.5, material.ambient);
+        assert_eq!(0.1, DEFAULT_MATERIAL.ambient);
     }
 
     #[test]
@@ -124,7 +100,7 @@ mod tests {
 
         let eyev = vector!(0., 0., -1.);
         let normalv = vector!(0., 0., -1.);
-        let light = point_light!(point!(0., 0., -10.), WHITE);
+        let light = PointLight::new(point!(0., 0., -10.), WHITE);
 
         let result = material.lightning(&light, position, eyev, normalv);
         assert_eq!(color!(1.9, 1.9, 1.9), result);
@@ -137,7 +113,7 @@ mod tests {
 
         let eyev = vector!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.);
         let normalv = vector!(0., 0., -1.);
-        let light = point_light!(point!(0., 0., -10.), WHITE);
+        let light = PointLight::new(point!(0., 0., -10.), WHITE);
 
         let result = material.lightning(&light, position, eyev, normalv);
         assert_eq!(WHITE, result);
@@ -150,7 +126,7 @@ mod tests {
 
         let eyev = vector!(0., 0., -1.);
         let normalv = vector!(0., 0., -1.);
-        let light = point_light!(point!(0., 10., -10.), WHITE);
+        let light = PointLight::new(point!(0., 10., -10.), WHITE);
 
         let result = material.lightning(&light, position, eyev, normalv);
         assert_eq!(color!(0.7364, 0.7364, 0.7364), result);
@@ -163,7 +139,7 @@ mod tests {
 
         let eyev = vector!(0., -2f64.sqrt() / 2., -2f64.sqrt() / 2.);
         let normalv = vector!(0., 0., -1.);
-        let light = point_light!(point!(0., 10., -10.), WHITE);
+        let light = PointLight::new(point!(0., 10., -10.), WHITE);
 
         let result = material.lightning(&light, position, eyev, normalv);
         assert_eq!(color!(1.6364, 1.6364, 1.6364), result);
@@ -176,7 +152,7 @@ mod tests {
 
         let eyev = vector!(0., 0., -1.);
         let normalv = vector!(0., 0., -1.);
-        let light = point_light!(point!(0., 0., 10.), WHITE);
+        let light = PointLight::new(point!(0., 0., 10.), WHITE);
 
         let result = material.lightning(&light, position, eyev, normalv);
         assert_eq!(color!(0.1, 0.1, 0.1), result);

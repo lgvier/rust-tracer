@@ -3,9 +3,9 @@ use crate::{
     color::{Color, BLACK, WHITE},
     intersection::{Intersection, PreparedComputations},
     light::PointLight,
-    material::Material,
+    material::MaterialBuilder,
     matrix::Matrix,
-    point, point_light,
+    point,
     ray::Ray,
     shapes::{Shape, Sphere},
     sphere,
@@ -65,14 +65,15 @@ impl World {
 
 impl Default for World {
     fn default() -> Self {
-        let light = point_light!(point!(-10., 10., -10.), WHITE);
+        let light = PointLight::new(point!(-10., 10., -10.), WHITE);
 
         let mut s1 = sphere!();
-        // TODO: Material builder?
-        let s1_material = Material::default()
-            .with_color(color!(0.8, 1., 0.6))
-            .with_diffuse(0.7)
-            .with_specular(0.2);
+        let s1_material = MaterialBuilder::default()
+            .color(color!(0.8, 1., 0.6))
+            .diffuse(0.7)
+            .specular(0.2)
+            .build()
+            .unwrap();
         s1.set_material(s1_material);
 
         let mut s2 = sphere!();
@@ -85,7 +86,7 @@ impl Default for World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{intersection, ray, tuple::Tuple, vector};
+    use crate::{material::Material, ray, tuple::Tuple, vector};
 
     #[test]
     fn intersect_with_ray() {
@@ -106,7 +107,7 @@ mod tests {
         let w = World::default();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = &w.objects[0];
-        let i = intersection!(4., s);
+        let i = Intersection::new(4., s);
         let comps = i.prepare_computations(&r);
         let c = w.shade_hit(&comps);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), c);
@@ -116,10 +117,18 @@ mod tests {
     fn color_intersection_behind_ray() {
         let mut w = World::default();
         let outer = &mut w.objects[0];
-        outer.set_material(outer.material().with_ambient(1.));
+        let outer_material = Material {
+            ambient: 1.,
+            ..*outer.material()
+        };
+        outer.set_material(outer_material);
         let inner = &mut w.objects[1];
-        let inner_color = inner.material().color;
-        inner.set_material(inner.material().with_ambient(1.));
+        let inner_material = Material {
+            ambient: 1.,
+            ..*inner.material()
+        };
+        let inner_color = inner_material.color;
+        inner.set_material(inner_material);
 
         let r = ray!(point!(0., 0., 0.75), vector!(0., 0., -1.));
         let c = &w.color_at(r);

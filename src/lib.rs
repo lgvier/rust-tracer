@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate derive_builder;
+
 pub mod camera;
 pub mod canvas;
 pub mod color;

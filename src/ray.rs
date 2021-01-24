@@ -3,7 +3,6 @@ use std::ops::Mul;
 
 #[macro_export]
 macro_rules! ray {
-    // () => {};
     // ray!(2., 3., 4.; 1., 0., 0.);
     ($($origin: expr),+; $($direction: expr),+) => {
         Ray::new(Tuple::point($($origin),*), Tuple::vector($($direction),*))

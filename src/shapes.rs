@@ -1,5 +1,4 @@
 use crate::{
-    intersection,
     intersection::Intersection,
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
@@ -31,7 +30,7 @@ impl Shape {
         let xs = self
             .intersect(r)
             .iter()
-            .map(|e| intersection!(*e, self))
+            .map(|e| Intersection::new(*e, self))
             .collect();
         Intersection::hit(xs)
     }
@@ -42,9 +41,9 @@ impl Shape {
         }
     }
 
-    pub fn material(&self) -> Material {
+    pub fn material(&self) -> &Material {
         match self {
-            Shape::Sphere(s) => s.material,
+            Shape::Sphere(s) => &s.material,
         }
     }
 
@@ -107,7 +106,7 @@ impl Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ray, vector};
+    use crate::{material::MaterialBuilder, ray, vector};
     use std::f64::consts::PI;
 
     #[test]
@@ -249,8 +248,7 @@ mod tests {
     #[test]
     fn sphere_set_material() {
         let mut s = sphere!();
-        let m = Material::default().with_ambient(1.);
-        s.set_material(m);
+        s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
         assert_eq!(1., s.material.ambient);
     }
 }
