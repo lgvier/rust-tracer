@@ -76,7 +76,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{color, point, vector};
+    use crate::{color, color::GREEN, point, vector};
 
     #[test]
     fn default() {
@@ -91,6 +91,23 @@ mod tests {
         material.ambient = 0.5;
         assert_eq!(0.5, material.ambient);
         assert_eq!(0.1, DEFAULT_MATERIAL.ambient);
+    }
+
+    #[test]
+    fn builder() {
+        let m1 = MaterialBuilder::default().color(GREEN).build().unwrap();
+        assert_eq!(GREEN, m1.color);
+        assert_eq!(0.1, m1.ambient);
+        assert_eq!(0.9, m1.diffuse);
+        assert_eq!(0.9, m1.specular);
+        assert_eq!(200., m1.shininess);
+
+        let m2 = MaterialBuilder::default().ambient(0.2).build().unwrap();
+        assert_eq!(WHITE, m2.color);
+        assert_eq!(0.2, m2.ambient);
+        assert_eq!(0.9, m2.diffuse);
+        assert_eq!(0.9, m2.specular);
+        assert_eq!(200., m2.shininess);
     }
 
     #[test]
