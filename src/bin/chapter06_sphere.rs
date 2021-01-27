@@ -53,7 +53,10 @@ fn main() -> std::io::Result<()> {
                 let normal = hit.object.normal_at(point);
                 let eye = -r.direction;
 
-                let color = hit.object.material().lightning(&light, point, eye, normal);
+                let color = hit
+                    .object
+                    .material()
+                    .lightning(&light, point, eye, normal, false);
                 c.write_pixel(x, y, color);
             }
         }

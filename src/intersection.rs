@@ -1,4 +1,4 @@
-use crate::{ray::Ray, shapes::Shape, tuple::Tuple};
+use crate::{ray::Ray, shapes::Shape, tuple::Tuple, EPSILON};
 
 #[derive(Debug, PartialEq)]
 pub struct Intersection<'a> {
@@ -10,6 +10,7 @@ pub struct PreparedComputations<'a> {
     pub t: f64,
     pub object: &'a Shape,
     pub point: Tuple,
+    pub over_point: Tuple,
     pub eyev: Tuple,
     pub normalv: Tuple,
     pub inside: bool,
@@ -48,16 +49,18 @@ impl Intersection<'_> {
     pub fn prepare_computations(&self, r: &Ray) -> PreparedComputations {
         let point = r.position(self.t);
         let eyev = -r.direction;
-        let normalv = self.object.normal_at(point);
-        let (inside, normalv) = if normalv.dot(&eyev) < 0. {
-            (true, -normalv)
+        let temp_normalv = self.object.normal_at(point);
+        let (inside, normalv) = if temp_normalv.dot(&eyev) < 0. {
+            (true, -temp_normalv)
         } else {
-            (false, normalv)
+            (false, temp_normalv)
         };
+        let over_point = point + normalv * EPSILON;
         PreparedComputations {
             t: self.t,
             object: self.object,
             point,
+            over_point,
             eyev,
             normalv,
             inside,
@@ -68,7 +71,7 @@ impl Intersection<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{point, sphere, vector};
+    use crate::{matrix::Matrix, point, sphere, vector};
     use crate::{ray, shapes::Sphere};
 
     #[test]
@@ -160,5 +163,16 @@ mod tests {
         assert_eq!(vector!(0., 0., -1.), comps.eyev);
         assert!(comps.inside);
         assert_eq!(vector!(0., 0., -1.), comps.normalv);
+    }
+
+    #[test]
+    fn hit_should_offset_point() {
+        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(0., 0., 1.));
+        let i = Intersection::new(5., &s);
+        let comps = i.prepare_computations(&r);
+        assert!(comps.over_point.z < -EPSILON / 2.);
+        assert!(comps.point.z > comps.over_point.z);
     }
 }
