@@ -91,7 +91,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{color, color::GREEN, patterns::StripePattern, point, stripe_pattern, vector};
+    use crate::{color, color::GREEN, patterns::StripePattern, point, stripes, vector};
 
     #[test]
     fn default() {
@@ -210,7 +210,7 @@ mod tests {
     #[test]
     fn lightning_with_pattern_applied() {
         let material = MaterialBuilder::default()
-            .pattern(stripe_pattern!(WHITE, BLACK))
+            .pattern(stripes!(WHITE, BLACK))
             .ambient(1.)
             .diffuse(0.)
             .specular(0.)
