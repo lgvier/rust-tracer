@@ -5,12 +5,20 @@ use crate::{
     point,
     ray::Ray,
     tuple::Tuple,
+    vector, EPSILON,
 };
 
 #[macro_export]
 macro_rules! sphere {
     () => {
         Shape::Sphere(Sphere::new())
+    };
+}
+
+#[macro_export]
+macro_rules! plane {
+    () => {
+        Shape::Plane(Plane::new())
     };
 }
 
@@ -22,12 +30,15 @@ https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-o
 #[derive(Debug, PartialEq)]
 pub enum Shape {
     Sphere(Sphere),
+    Plane(Plane),
 }
 
 impl Shape {
     pub fn intersect<'a>(&'a self, r: &Ray) -> Vec<f64> {
+        let local_ray = r * self.transform().inverse().unwrap();
         match self {
-            Shape::Sphere(s) => s.intersect(r),
+            Shape::Sphere(s) => s.local_intersect(&local_ray),
+            Shape::Plane(p) => p.local_intersect(&local_ray),
         }
     }
 
@@ -40,27 +51,42 @@ impl Shape {
         Intersection::hit(xs)
     }
 
+    pub fn transform(&self) -> &Matrix {
+        match self {
+            Shape::Sphere(s) => &s.transform,
+            Shape::Plane(p) => &p.transform,
+        }
+    }
+
     pub fn set_transform(&mut self, transform: Matrix) {
         match self {
             Shape::Sphere(s) => s.set_transform(transform),
+            Shape::Plane(p) => p.set_transform(transform),
         }
     }
 
     pub fn normal_at(&self, p: Tuple) -> Tuple {
-        match self {
-            Shape::Sphere(s) => s.normal_at(p),
-        }
+        let transform_inverse = self.transform().inverse().unwrap();
+        let local_point = transform_inverse * p;
+        let local_normal = match self {
+            Shape::Sphere(s) => s.local_normal_at(local_point),
+            Shape::Plane(p) => p.local_normal_at(local_point),
+        };
+        let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
+        world_normal.normalize()
     }
 
     pub fn material(&self) -> &Material {
         match self {
             Shape::Sphere(s) => &s.material,
+            Shape::Plane(p) => &p.material,
         }
     }
 
     pub fn set_material(&mut self, material: Material) {
         match self {
             Shape::Sphere(s) => s.set_material(material),
+            Shape::Plane(p) => p.set_material(material),
         }
     }
 }
@@ -79,11 +105,10 @@ impl Sphere {
         }
     }
 
-    pub fn intersect(&self, r: &Ray) -> Vec<f64> {
-        let obj_ray = r * self.transform.inverse().unwrap();
-        let sphere_to_ray = obj_ray.origin - point!();
-        let a = obj_ray.direction.dot(&obj_ray.direction);
-        let b = 2. * obj_ray.direction.dot(&sphere_to_ray);
+    pub fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+        let sphere_to_ray = local_ray.origin - point!();
+        let a = local_ray.direction.dot(&local_ray.direction);
+        let b = 2. * local_ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - 1.;
 
         let discriminant = b * b - 4. * a * c;
@@ -101,12 +126,45 @@ impl Sphere {
         self.transform = transform;
     }
 
-    pub fn normal_at(&self, p: Tuple) -> Tuple {
-        let transform_inverse = self.transform.inverse().unwrap();
-        let obj_point = transform_inverse * p;
-        let obj_normal = (obj_point - point!()).normalize();
-        let world_normal = (transform_inverse.transpose() * obj_normal).to_vector();
-        world_normal.normalize()
+    pub fn local_normal_at(&self, local_point: Tuple) -> Tuple {
+        local_point - point!()
+    }
+
+    pub fn set_material(&mut self, material: Material) {
+        self.material = material;
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Plane {
+    transform: Matrix,
+    material: Material,
+}
+
+impl Plane {
+    pub fn new() -> Self {
+        Plane {
+            transform: IDENTITY_MATRIX,
+            material: Material::default(),
+        }
+    }
+
+    pub fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+        if local_ray.direction.y.abs() < EPSILON {
+            // ray is parallel to the plane
+            vec![]
+        } else {
+            let t = -local_ray.origin.y / local_ray.direction.y;
+            vec![t]
+        }
+    }
+
+    pub fn set_transform(&mut self, transform: Matrix) {
+        self.transform = transform;
+    }
+
+    pub fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
+        vector!(0., 1., 0.)
     }
 
     pub fn set_material(&mut self, material: Material) {
@@ -118,6 +176,7 @@ impl Sphere {
 mod tests {
     use super::*;
     use crate::{material::MaterialBuilder, ray, vector};
+    use rand::Rng;
     use std::f64::consts::PI;
 
     #[test]
@@ -261,5 +320,84 @@ mod tests {
         let mut s = sphere!();
         s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
         assert_eq!(1., s.material().ambient);
+    }
+
+    fn test_shape() -> Shape {
+        let mut rng = rand::thread_rng();
+        match rng.gen::<u8>() % 2 {
+            0 => sphere!(),
+            _ => plane!(),
+        }
+    }
+
+    #[test]
+    fn shape_default_transformation() {
+        let s = test_shape();
+        assert_eq!(&IDENTITY_MATRIX, s.transform());
+    }
+
+    #[test]
+    fn shape_assign_transformation() {
+        let mut s = test_shape();
+        s.set_transform(Matrix::translation(2., 3., 4.));
+        assert_eq!(&Matrix::translation(2., 3., 4.), s.transform());
+    }
+
+    #[test]
+    fn shape_default_material() {
+        let s = test_shape();
+        assert_eq!(&Material::default(), s.material());
+    }
+
+    #[test]
+    fn shape_assign_material() {
+        let mut s = test_shape();
+        s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
+        assert_eq!(1., s.material().ambient);
+    }
+
+    #[test]
+    fn normal_of_plane_is_constant_everywhere() {
+        let p = Plane::new();
+        let n1 = p.local_normal_at(point!(0., 0., 0.));
+        let n2 = p.local_normal_at(point!(10., 0., -10.));
+        let n3 = p.local_normal_at(point!(-5., 0., 150.));
+        assert_eq!(vector!(0., 1., 0.), n1);
+        assert_eq!(vector!(0., 1., 0.), n2);
+        assert_eq!(vector!(0., 1., 0.), n3);
+    }
+
+    #[test]
+    fn intersect_with_ray_parallel_to_plane() {
+        let p = Plane::new();
+        let r = ray!(0., 10., 0.; 0., 0., 1.);
+        let xs = p.local_intersect(&r);
+        assert!(xs.is_empty());
+    }
+
+    #[test]
+    fn intersect_with_coplanar_ray() {
+        let p = Plane::new();
+        let r = ray!(0., 0., 0.; 0., 0., 1.);
+        let xs = p.local_intersect(&r);
+        assert!(xs.is_empty());
+    }
+
+    #[test]
+    fn ray_intersecting_plane_from_above() {
+        let p = Plane::new();
+        let r = ray!(0., 1., 0.; 0., -1., 0.);
+        let xs = p.local_intersect(&r);
+        assert_eq!(1, xs.len());
+        assert_eq!(1., xs[0]);
+    }
+
+    #[test]
+    fn ray_intersecting_plane_from_below() {
+        let p = Plane::new();
+        let r = ray!(0., -1., 0.; 0., 1., 0.);
+        let xs = p.local_intersect(&r);
+        assert_eq!(1, xs.len());
+        assert_eq!(1., xs[0]);
     }
 }
