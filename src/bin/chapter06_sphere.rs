@@ -2,15 +2,15 @@ use std::f64::consts::PI;
 
 use rust_tracer::{
     canvas::Canvas,
-    color,
     color::{Color, WHITE},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
+    patterns::Pattern,
     point, ray,
     ray::Ray,
     shapes::{Shape, Sphere},
-    sphere,
+    solid, sphere,
     tuple::Tuple,
 };
 
@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
     //sphere.set_transform(Matrix::shearing(1., 0., 0., 0., 0., 0.) * Matrix::scaling(0.5, 1., 1.));
 
     let material = MaterialBuilder::default()
-        .color(color!(1., 0.2, 1.))
+        .pattern(solid!(1., 0.2, 1.))
         .ambient(0.2)
         .build()
         .unwrap();

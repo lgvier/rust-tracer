@@ -1,11 +1,13 @@
 use crate::{
     color::{Color, BLACK, WHITE},
     light::PointLight,
+    patterns::Pattern,
+    solid,
     tuple::Tuple,
 };
 
 const DEFAULT_MATERIAL: Material = Material {
-    color: WHITE,
+    pattern: solid!(WHITE),
     ambient: 0.1,
     diffuse: 0.9,
     specular: 0.9,
@@ -15,7 +17,7 @@ const DEFAULT_MATERIAL: Material = Material {
 #[derive(Copy, Clone, Debug, PartialEq, Builder)]
 #[builder(default)]
 pub struct Material {
-    pub color: Color,
+    pub pattern: Pattern,
     pub ambient: f64,
     pub diffuse: f64,
     pub specular: f64,
@@ -23,9 +25,15 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new(color: Color, ambient: f64, diffuse: f64, specular: f64, shininess: f64) -> Self {
+    pub fn new(
+        pattern: Pattern,
+        ambient: f64,
+        diffuse: f64,
+        specular: f64,
+        shininess: f64,
+    ) -> Self {
         Self {
-            color,
+            pattern,
             ambient,
             diffuse,
             specular,
@@ -41,7 +49,8 @@ impl Material {
         normalv: Tuple,
         in_shadow: bool,
     ) -> Color {
-        let effective_color = self.color * light.intensity;
+        let color = self.pattern.color_at(point);
+        let effective_color = color * light.intensity;
         let lightv = (light.position - point).normalize();
         let light_dot_normal = lightv.dot(&normalv);
 
@@ -82,12 +91,12 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{color, color::GREEN, point, vector};
+    use crate::{color, color::GREEN, patterns::StripePattern, point, stripe_pattern, vector};
 
     #[test]
     fn default() {
         let material = Material::default();
-        assert_eq!(WHITE, material.color);
+        assert_eq!(solid!(WHITE), material.pattern);
         assert_eq!(0.1, material.ambient);
         assert_eq!(0.9, material.diffuse);
         assert_eq!(0.9, material.specular);
@@ -101,15 +110,18 @@ mod tests {
 
     #[test]
     fn builder() {
-        let m1 = MaterialBuilder::default().color(GREEN).build().unwrap();
-        assert_eq!(GREEN, m1.color);
+        let m1 = MaterialBuilder::default()
+            .pattern(solid!(GREEN))
+            .build()
+            .unwrap();
+        assert_eq!(solid!(GREEN), m1.pattern);
         assert_eq!(0.1, m1.ambient);
         assert_eq!(0.9, m1.diffuse);
         assert_eq!(0.9, m1.specular);
         assert_eq!(200., m1.shininess);
 
         let m2 = MaterialBuilder::default().ambient(0.2).build().unwrap();
-        assert_eq!(WHITE, m2.color);
+        assert_eq!(solid!(WHITE), m2.pattern);
         assert_eq!(0.2, m2.ambient);
         assert_eq!(0.9, m2.diffuse);
         assert_eq!(0.9, m2.specular);
@@ -193,5 +205,26 @@ mod tests {
 
         let result = material.lightning(&light, position, eyev, normalv, in_shadow);
         assert_eq!(color!(0.1, 0.1, 0.1), result);
+    }
+
+    #[test]
+    fn lightning_with_pattern_applied() {
+        let material = MaterialBuilder::default()
+            .pattern(stripe_pattern!(WHITE, BLACK))
+            .ambient(1.)
+            .diffuse(0.)
+            .specular(0.)
+            .build()
+            .unwrap();
+
+        let eyev = vector!(0., 0., -1.);
+        let normalv = vector!(0., 0., -1.);
+        let light = PointLight::new(point!(0., 0., -10.), WHITE);
+        let in_shadow = false;
+
+        let c1 = material.lightning(&light, point!(0.9, 0., 0.), eyev, normalv, in_shadow);
+        let c2 = material.lightning(&light, point!(1.1, 0., 0.), eyev, normalv, in_shadow);
+        assert_eq!(WHITE, c1);
+        assert_eq!(BLACK, c2);
     }
 }

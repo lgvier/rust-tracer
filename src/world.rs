@@ -1,14 +1,14 @@
 use crate::{
-    color,
     color::{Color, BLACK, WHITE},
     intersection::{Intersection, PreparedComputations},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
+    patterns::Pattern,
     point, ray,
     ray::Ray,
     shapes::{Shape, Sphere},
-    sphere,
+    solid, sphere,
     tuple::Tuple,
 };
 
@@ -85,7 +85,7 @@ impl Default for World {
 
         let mut s1 = sphere!();
         let s1_material = MaterialBuilder::default()
-            .color(color!(0.8, 1., 0.6))
+            .pattern(solid!(0.8, 1., 0.6))
             .diffuse(0.7)
             .specular(0.2)
             .build()
@@ -102,7 +102,7 @@ impl Default for World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{material::Material, ray, tuple::Tuple, vector};
+    use crate::{color, material::Material, ray, tuple::Tuple, vector};
 
     #[test]
     fn intersect_with_ray() {
@@ -143,7 +143,10 @@ mod tests {
             ambient: 1.,
             ..*inner.material()
         };
-        let inner_color = inner_material.color;
+        let inner_color = match inner_material.pattern {
+            Pattern::Solid(c) => c,
+            _ => panic!("expected solid pattern"),
+        };
         inner.set_material(inner_material);
 
         let r = ray!(point!(0., 0., 0.75), vector!(0., 0., -1.));

@@ -105,7 +105,7 @@ impl Sphere {
         }
     }
 
-    pub fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+    fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
         let sphere_to_ray = local_ray.origin - point!();
         let a = local_ray.direction.dot(&local_ray.direction);
         let b = 2. * local_ray.direction.dot(&sphere_to_ray);
@@ -122,15 +122,15 @@ impl Sphere {
         }
     }
 
-    pub fn set_transform(&mut self, transform: Matrix) {
+    fn set_transform(&mut self, transform: Matrix) {
         self.transform = transform;
     }
 
-    pub fn local_normal_at(&self, local_point: Tuple) -> Tuple {
+    fn local_normal_at(&self, local_point: Tuple) -> Tuple {
         local_point - point!()
     }
 
-    pub fn set_material(&mut self, material: Material) {
+    fn set_material(&mut self, material: Material) {
         self.material = material;
     }
 }
@@ -149,7 +149,7 @@ impl Plane {
         }
     }
 
-    pub fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+    fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
         if local_ray.direction.y.abs() < EPSILON {
             // ray is parallel to the plane
             vec![]
@@ -159,15 +159,15 @@ impl Plane {
         }
     }
 
-    pub fn set_transform(&mut self, transform: Matrix) {
+    fn set_transform(&mut self, transform: Matrix) {
         self.transform = transform;
     }
 
-    pub fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
+    fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
         vector!(0., 1., 0.)
     }
 
-    pub fn set_material(&mut self, material: Material) {
+    fn set_material(&mut self, material: Material) {
         self.material = material;
     }
 }

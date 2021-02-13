@@ -1,13 +1,13 @@
 use rust_tracer::{
     camera::Camera,
-    color,
     color::{Color, WHITE},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
+    patterns::Pattern,
     point,
     shapes::{Shape, Sphere},
-    sphere,
+    solid, sphere,
     tuple::Tuple,
     vector,
     world::World,
@@ -16,7 +16,7 @@ use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
     let floor_and_walls_material = MaterialBuilder::default()
-        .color(color!(1., 0.9, 0.9))
+        .pattern(solid!(1., 0.9, 0.9))
         .specular(0.)
         .build()
         .unwrap();
@@ -49,7 +49,7 @@ fn main() -> std::io::Result<()> {
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .color(color!(0.1, 1., 0.5))
+            .pattern(solid!(0.1, 1., 0.5))
             .build()
             .unwrap(),
     );
@@ -60,7 +60,7 @@ fn main() -> std::io::Result<()> {
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .color(color!(1., 0.8, 0.1))
+            .pattern(solid!(1., 0.8, 0.1))
             .build()
             .unwrap(),
     );
@@ -71,7 +71,7 @@ fn main() -> std::io::Result<()> {
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .color(color!(0.5, 1., 0.1))
+            .pattern(solid!(0.5, 1., 0.1))
             .build()
             .unwrap(),
     );
