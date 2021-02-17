@@ -1,14 +1,14 @@
 use rust_tracer::{
     camera::Camera,
     color::{Color, BLUE, RED, WHITE},
-    gradient,
+    gradient_pattern,
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{GradientPattern, Pattern, StripePattern},
-    plane, point,
+    patterns::{GradientPattern, Pattern, RingPattern, StripePattern},
+    plane, point, ring_pattern,
     shapes::{Plane, Shape, Sphere},
-    solid, sphere, stripes,
+    sphere, stripe_pattern,
     tuple::Tuple,
     vector,
     world::World,
@@ -16,8 +16,9 @@ use rust_tracer::{
 use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
+    let floor_pattern = ring_pattern!(RED, BLUE);
     let floor_material = MaterialBuilder::default()
-        .pattern(solid!(1., 0.9, 0.9))
+        .pattern(floor_pattern)
         .specular(0.)
         .build()
         .unwrap();
@@ -28,33 +29,39 @@ fn main() -> std::io::Result<()> {
 
     let mut middle = sphere!();
     middle.set_transform(Matrix::translation(-0.5, 1., 0.5));
+    let mut middle_pattern = stripe_pattern!(0.5, 1., 0.1; 1., 0.8, 0.1);
+    middle_pattern.set_transform(Matrix::scaling(0.5, 0.5, 0.5));
     middle.set_material(
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .pattern(stripes!(0.5, 1., 0.1; 1., 0.8, 0.1))
+            .pattern(middle_pattern)
             .build()
             .unwrap(),
     );
 
     let mut left = sphere!();
     left.set_transform(Matrix::translation(-1.5, 0.33, -0.55) * Matrix::scaling(0.33, 0.33, 0.33));
+    let mut left_pattern = gradient_pattern!(0.5, 1., 0.1; 1., 0.8, 0.1);
+    left_pattern.set_transform(Matrix::rotation_z(PI / 2.));
     left.set_material(
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .pattern(gradient!(0.5, 1., 0.1; 1., 0.8, 0.1))
+            .pattern(left_pattern)
             .build()
             .unwrap(),
     );
 
     let mut right = sphere!();
     right.set_transform(Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5));
+    let mut right_pattern = ring_pattern!(RED, BLUE);
+    right_pattern.set_transform(Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_z(PI / 3.));
     right.set_material(
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
-            .pattern(gradient!(RED, BLUE))
+            .pattern(right_pattern)
             .build()
             .unwrap(),
     );

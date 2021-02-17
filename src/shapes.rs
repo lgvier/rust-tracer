@@ -60,8 +60,8 @@ impl Shape {
 
     pub fn set_transform(&mut self, transform: Matrix) {
         match self {
-            Shape::Sphere(s) => s.set_transform(transform),
-            Shape::Plane(p) => p.set_transform(transform),
+            Shape::Sphere(s) => s.transform = transform,
+            Shape::Plane(p) => p.transform = transform,
         }
     }
 
@@ -85,8 +85,8 @@ impl Shape {
 
     pub fn set_material(&mut self, material: Material) {
         match self {
-            Shape::Sphere(s) => s.set_material(material),
-            Shape::Plane(p) => p.set_material(material),
+            Shape::Sphere(s) => s.material = material,
+            Shape::Plane(p) => p.material = material,
         }
     }
 }
@@ -122,16 +122,8 @@ impl Sphere {
         }
     }
 
-    fn set_transform(&mut self, transform: Matrix) {
-        self.transform = transform;
-    }
-
     fn local_normal_at(&self, local_point: Tuple) -> Tuple {
         local_point - point!()
-    }
-
-    fn set_material(&mut self, material: Material) {
-        self.material = material;
     }
 }
 
@@ -159,16 +151,8 @@ impl Plane {
         }
     }
 
-    fn set_transform(&mut self, transform: Matrix) {
-        self.transform = transform;
-    }
-
     fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
         vector!(0., 1., 0.)
-    }
-
-    fn set_material(&mut self, material: Material) {
-        self.material = material;
     }
 }
 
@@ -231,7 +215,7 @@ mod tests {
     fn sphere_set_transform() {
         let mut s = Sphere::new();
         let t = Matrix::translation(2., 3., 4.);
-        s.set_transform(t);
+        s.transform = t;
         assert_eq!(t, s.transform);
     }
 

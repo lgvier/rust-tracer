@@ -56,7 +56,7 @@ fn main() -> std::io::Result<()> {
                 let color = hit
                     .object
                     .material()
-                    .lightning(&light, point, eye, normal, false);
+                    .lightning(&shape, &light, point, eye, normal, false);
                 c.write_pixel(x, y, color);
             }
         }
