@@ -48,12 +48,24 @@ macro_rules! ring_pattern {
     };
 }
 
+#[macro_export]
+macro_rules! checkers_pattern {
+    ($a:expr, $b:expr) => {
+        Pattern::Checkers(CheckersPattern::new($a, $b))
+    };
+    // checkers_pattern!(0.1, 1., 0.5; 1., 0.8, 0.1)
+    ($($a: expr),+; $($b: expr),+) => {
+        Pattern::Checkers(CheckersPattern::new(Color::new($($a),*), Color::new($($b),*)))
+    };
+}
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Pattern {
     Solid(Color),
     Stripes(StripePattern),
     Gradient(GradientPattern),
     Ring(RingPattern),
+    Checkers(CheckersPattern),
 }
 
 impl Pattern {
@@ -67,6 +79,9 @@ impl Pattern {
                 pattern.color_at(self.to_pattern_point(object, world_point))
             }
             Pattern::Ring(pattern) => pattern.color_at(self.to_pattern_point(object, world_point)),
+            Pattern::Checkers(pattern) => {
+                pattern.color_at(self.to_pattern_point(object, world_point))
+            }
         }
     }
 
@@ -81,6 +96,7 @@ impl Pattern {
             Pattern::Stripes(pattern) => &pattern.transform,
             Pattern::Gradient(pattern) => &pattern.transform,
             Pattern::Ring(pattern) => &pattern.transform,
+            Pattern::Checkers(pattern) => &pattern.transform,
         }
     }
 
@@ -90,6 +106,7 @@ impl Pattern {
             Pattern::Stripes(pattern) => pattern.transform = transform,
             Pattern::Gradient(pattern) => pattern.transform = transform,
             Pattern::Ring(pattern) => pattern.transform = transform,
+            Pattern::Checkers(pattern) => pattern.transform = transform,
         }
     }
 }
@@ -103,7 +120,7 @@ pub struct StripePattern {
 
 impl StripePattern {
     pub fn new(a: Color, b: Color) -> Self {
-        StripePattern {
+        Self {
             a,
             b,
             transform: IDENTITY_MATRIX,
@@ -128,7 +145,7 @@ pub struct GradientPattern {
 
 impl GradientPattern {
     pub fn new(a: Color, b: Color) -> Self {
-        GradientPattern {
+        Self {
             a,
             b,
             transform: IDENTITY_MATRIX,
@@ -151,7 +168,7 @@ pub struct RingPattern {
 
 impl RingPattern {
     pub fn new(a: Color, b: Color) -> Self {
-        RingPattern {
+        Self {
             a,
             b,
             transform: IDENTITY_MATRIX,
@@ -160,6 +177,31 @@ impl RingPattern {
 
     fn color_at(&self, p: Tuple) -> Color {
         if (p.x * p.x + p.z * p.z).sqrt().floor() % 2. == 0. {
+            self.a
+        } else {
+            self.b
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct CheckersPattern {
+    pub a: Color,
+    pub b: Color,
+    transform: Matrix,
+}
+
+impl CheckersPattern {
+    pub fn new(a: Color, b: Color) -> Self {
+        Self {
+            a,
+            b,
+            transform: IDENTITY_MATRIX,
+        }
+    }
+
+    fn color_at(&self, p: Tuple) -> Color {
+        if (p.x.floor() + p.y.floor() + p.z.floor()) % 2. == 0. {
             self.a
         } else {
             self.b
@@ -262,5 +304,29 @@ mod tests {
         assert_eq!(BLACK, pattern.color_at(point!(1., 0., 0.)));
         assert_eq!(BLACK, pattern.color_at(point!(0., 0., 1.)));
         assert_eq!(BLACK, pattern.color_at(point!(0.708, 0., 0.708)));
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_x() {
+        let pattern = CheckersPattern::new(WHITE, BLACK);
+        assert_eq!(WHITE, pattern.color_at(point!(0., 0., 0.)));
+        assert_eq!(WHITE, pattern.color_at(point!(0.99, 0., 0.)));
+        assert_eq!(BLACK, pattern.color_at(point!(1.01, 0., 0.)));
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_y() {
+        let pattern = CheckersPattern::new(WHITE, BLACK);
+        assert_eq!(WHITE, pattern.color_at(point!(0., 0., 0.)));
+        assert_eq!(WHITE, pattern.color_at(point!(0., 0.99, 0.)));
+        assert_eq!(BLACK, pattern.color_at(point!(0., 1.01, 0.)));
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_z() {
+        let pattern = CheckersPattern::new(WHITE, BLACK);
+        assert_eq!(WHITE, pattern.color_at(point!(0., 0., 0.)));
+        assert_eq!(WHITE, pattern.color_at(point!(0., 0., 0.99)));
+        assert_eq!(BLACK, pattern.color_at(point!(0., 0., 1.01)));
     }
 }

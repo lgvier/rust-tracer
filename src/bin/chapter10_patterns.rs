@@ -1,11 +1,12 @@
 use rust_tracer::{
     camera::Camera,
+    checkers_pattern,
     color::{Color, BLUE, RED, WHITE},
     gradient_pattern,
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{GradientPattern, Pattern, RingPattern, StripePattern},
+    patterns::{CheckersPattern, GradientPattern, Pattern, RingPattern, StripePattern},
     plane, point, ring_pattern,
     shapes::{Plane, Shape, Sphere},
     sphere, stripe_pattern,
@@ -16,7 +17,7 @@ use rust_tracer::{
 use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
-    let floor_pattern = ring_pattern!(RED, BLUE);
+    let floor_pattern = checkers_pattern!(RED, BLUE);
     let floor_material = MaterialBuilder::default()
         .pattern(floor_pattern)
         .specular(0.)
