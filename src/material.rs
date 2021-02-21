@@ -13,6 +13,7 @@ const DEFAULT_MATERIAL: Material = Material {
     diffuse: 0.9,
     specular: 0.9,
     shininess: 200.,
+    reflective: 0.,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Builder)]
@@ -23,6 +24,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub reflective: f64,
 }
 
 impl Material {
@@ -32,6 +34,7 @@ impl Material {
         diffuse: f64,
         specular: f64,
         shininess: f64,
+        reflective: f64,
     ) -> Self {
         Self {
             pattern,
@@ -39,6 +42,7 @@ impl Material {
             diffuse,
             specular,
             shininess,
+            reflective,
         }
     }
 
@@ -94,8 +98,14 @@ impl Default for Material {
 mod tests {
     use super::*;
     use crate::{
-        color, color::GREEN, patterns::StripePattern, point, shapes::Sphere, sphere,
-        stripe_pattern, vector,
+        color,
+        color::GREEN,
+        intersection::Intersection,
+        patterns::StripePattern,
+        plane, point, ray,
+        ray::Ray,
+        shapes::{Plane, Sphere},
+        sphere, stripe_pattern, vector,
     };
 
     #[test]
@@ -252,5 +262,20 @@ mod tests {
         );
         assert_eq!(WHITE, c1);
         assert_eq!(BLACK, c2);
+    }
+
+    #[test]
+    fn precomputing_reflection_vector() {
+        let shape = plane!();
+        let r = ray!(
+            point!(0., 1., -1.),
+            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+        );
+        let i = Intersection::new(2f64.sqrt(), &shape);
+        let comps = i.prepare_computations(&r);
+        assert_eq!(
+            vector!(0., 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
+            comps.reflectv
+        )
     }
 }

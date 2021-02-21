@@ -33,6 +33,11 @@ pub const BLUE: Color = Color {
     g: 0.,
     b: 1.,
 };
+pub const YELLOW: Color = Color {
+    r: 1.,
+    g: 1.,
+    b: 0.,
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Color {

@@ -14,6 +14,7 @@ pub struct PreparedComputations<'a> {
     pub eyev: Tuple,
     pub normalv: Tuple,
     pub inside: bool,
+    pub reflectv: Tuple,
 }
 
 impl Intersection<'_> {
@@ -56,6 +57,8 @@ impl Intersection<'_> {
             (false, temp_normalv)
         };
         let over_point = point + normalv * EPSILON;
+        let reflectv = r.direction.reflect(normalv);
+
         PreparedComputations {
             t: self.t,
             object: self.object,
@@ -64,6 +67,7 @@ impl Intersection<'_> {
             eyev,
             normalv,
             inside,
+            reflectv,
         }
     }
 }

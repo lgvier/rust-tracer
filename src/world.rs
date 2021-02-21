@@ -10,6 +10,7 @@ use crate::{
     shapes::{Shape, Sphere},
     solid, sphere,
     tuple::Tuple,
+    MAX_REFLECTION_RECURSION,
 };
 
 pub struct World {
@@ -22,7 +23,22 @@ impl World {
         Self { light, objects }
     }
 
-    pub fn intersect(&self, r: &Ray) -> Vec<Intersection> {
+    pub fn color_at(&self, r: &Ray) -> Color {
+        self.color_at_internal(r, MAX_REFLECTION_RECURSION)
+    }
+
+    fn color_at_internal(&self, r: &Ray, remaining: usize) -> Color {
+        let xs = self.intersect(&r);
+        match xs.iter().find(|i| i.t >= 0.) {
+            Some(i) => {
+                let comps = i.prepare_computations(&r);
+                self.shade_hit(&comps, remaining)
+            }
+            None => BLACK,
+        }
+    }
+
+    fn intersect(&self, r: &Ray) -> Vec<Intersection> {
         // self.objects
         //     .iter()
         //     .flat_map(|object| {
@@ -43,30 +59,21 @@ impl World {
         result
     }
 
-    pub fn shade_hit(&self, comps: &PreparedComputations) -> Color {
+    fn shade_hit(&self, comps: &PreparedComputations, remaining: usize) -> Color {
         let shadowed = self.is_shadowed(comps.over_point);
-        comps.object.material().lightning(
+        let surface = comps.object.material().lightning(
             comps.object,
             &self.light,
             comps.over_point,
             comps.eyev,
             comps.normalv,
             shadowed,
-        )
+        );
+        let reflected = self.reflected_color(comps, remaining);
+        surface + reflected
     }
 
-    pub fn color_at(&self, r: &Ray) -> Color {
-        let xs = self.intersect(&r);
-        match xs.iter().find(|i| i.t >= 0.) {
-            Some(i) => {
-                let comps = i.prepare_computations(&r);
-                self.shade_hit(&comps)
-            }
-            None => BLACK,
-        }
-    }
-
-    pub fn is_shadowed(&self, point: Tuple) -> bool {
+    fn is_shadowed(&self, point: Tuple) -> bool {
         let v = self.light.position - point;
         let distance = v.magnitude();
         let direction = v.normalize();
@@ -77,6 +84,20 @@ impl World {
             Some(i) => i.t < distance,
             None => false,
         }
+    }
+
+    fn reflected_color(&self, comps: &PreparedComputations, remaining: usize) -> Color {
+        if remaining <= 0 {
+            return BLACK;
+        }
+        let reflective = comps.object.material().reflective;
+        if reflective == 0.0 {
+            return BLACK;
+        }
+
+        let reflect_ray = ray!(comps.over_point, comps.reflectv);
+        let color = self.color_at_internal(&reflect_ray, remaining - 1);
+        color * reflective
     }
 }
 
@@ -103,7 +124,7 @@ impl Default for World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{color, material::Material, ray, tuple::Tuple, vector};
+    use crate::{color, material::Material, plane, ray, shapes::Plane, tuple::Tuple, vector};
 
     #[test]
     fn intersect_with_ray() {
@@ -126,33 +147,36 @@ mod tests {
         let s = &w.objects[0];
         let i = Intersection::new(4., s);
         let comps = i.prepare_computations(&r);
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), c);
     }
 
     #[test]
     fn color_intersection_behind_ray() {
         let mut w = World::default();
-        let outer = &mut w.objects[0];
-        let outer_material = Material {
-            ambient: 1.,
-            ..*outer.material()
-        };
-        outer.set_material(outer_material);
-        let inner = &mut w.objects[1];
-        let inner_material = Material {
-            ambient: 1.,
-            ..*inner.material()
-        };
-        let inner_color = match inner_material.pattern {
-            Pattern::Solid(c) => c,
-            _ => panic!("expected solid pattern"),
-        };
-        inner.set_material(inner_material);
+        let inner_color;
+        {
+            let outer = &mut w.objects[0];
+            let outer_material = Material {
+                ambient: 1.,
+                ..*outer.material()
+            };
+            outer.set_material(outer_material);
+            let inner = &mut w.objects[1];
+            let inner_material = Material {
+                ambient: 1.,
+                ..*inner.material()
+            };
+            inner_color = match inner_material.pattern {
+                Pattern::Solid(c) => c,
+                _ => panic!("expected solid pattern"),
+            };
+            inner.set_material(inner_material);
+        }
 
         let r = ray!(point!(0., 0., 0.75), vector!(0., 0., -1.));
-        let c = &w.color_at(&r);
-        assert_eq!(inner_color, *c);
+        let c = w.color_at(&r);
+        assert_eq!(inner_color, c);
     }
 
     #[test]
@@ -194,7 +218,99 @@ mod tests {
         let r = ray!(point!(0., 0., 5.), vector!(0., 0., 1.));
         let i = Intersection::new(4., &w.objects[1]);
         let comps = i.prepare_computations(&r);
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.1, 0.1, 0.1), c);
+    }
+
+    #[test]
+    fn reflected_color_non_reflective_material() {
+        let mut w = World::default();
+        {
+            let shape = &mut w.objects[1];
+            let material = Material {
+                ambient: 1.,
+                ..*shape.material()
+            };
+            shape.set_material(material);
+        }
+
+        let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
+        let i = Intersection::new(1., &w.objects[1]);
+        let comps = i.prepare_computations(&r);
+        let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
+        assert_eq!(BLACK, color);
+    }
+
+    #[test]
+    fn reflected_color_reflective_material() {
+        let mut w = World::default();
+        {
+            let mut shape = plane!();
+            shape.set_material(MaterialBuilder::default().reflective(0.5).build().unwrap());
+            shape.set_transform(Matrix::translation(0., -1., 0.));
+            w.objects.push(shape);
+        }
+
+        let r = ray!(
+            point!(0., 0., -3.),
+            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+        );
+        let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
+        let comps = i.prepare_computations(&r);
+        let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
+        assert_eq!(color!(0.19033, 0.23791, 0.14274), color);
+    }
+
+    #[test]
+    fn shade_hit_reflective_material() {
+        let mut w = World::default();
+        {
+            let mut shape = plane!();
+            shape.set_material(MaterialBuilder::default().reflective(0.5).build().unwrap());
+            shape.set_transform(Matrix::translation(0., -1., 0.));
+            w.objects.push(shape);
+        }
+        let r = ray!(
+            point!(0., 0., -3.),
+            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+        );
+        let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
+        let comps = i.prepare_computations(&r);
+        let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
+        assert_eq!(color!(0.87676, 0.92434, 0.82917), c);
+    }
+
+    #[test]
+    fn color_at_with_mutually_reflective_surfaces_doesnt_cause_infinite_recursion() {
+        let light = PointLight::new(point!(0., 0., 0.), WHITE);
+        let mut lower = plane!();
+        lower.set_material(MaterialBuilder::default().reflective(1.).build().unwrap());
+        lower.set_transform(Matrix::translation(0., -1., 0.));
+        let mut upper = plane!();
+        upper.set_material(MaterialBuilder::default().reflective(1.).build().unwrap());
+        upper.set_transform(Matrix::translation(0., 1., 0.));
+        let w = World::new(light, vec![lower, upper]);
+        let r = ray!(point!(0., 0., 0.), vector!(0., 1., 0.));
+        w.color_at(&r); // should terminate succesfully
+    }
+
+    #[test]
+    fn reflected_color_at_max_recursive_depth() {
+        let mut w = World::default();
+        {
+            let mut shape = plane!();
+            shape.set_material(MaterialBuilder::default().reflective(0.5).build().unwrap());
+            shape.set_transform(Matrix::translation(0., -1., 0.));
+            w.objects.push(shape);
+        }
+
+        let r = ray!(
+            point!(0., 0., -3.),
+            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+        );
+        let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
+        let comps = i.prepare_computations(&r);
+        let color = w.reflected_color(&comps, 0);
+        assert_eq!(BLACK, color);
     }
 }

@@ -1,15 +1,14 @@
 use rust_tracer::{
     camera::Camera,
     checkers_pattern,
-    color::{Color, BLACK, BLUE, RED, WHITE},
-    gradient_pattern,
+    color::{Color, BLACK, BLUE, RED, WHITE, YELLOW},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{CheckersPattern, GradientPattern, Pattern, RingPattern, StripePattern},
+    patterns::{CheckersPattern, Pattern, RingPattern, StripePattern},
     plane, point, ring_pattern,
     shapes::{Plane, Shape, Sphere},
-    sphere, stripe_pattern,
+    solid, sphere, stripe_pattern,
     tuple::Tuple,
     vector,
     world::World,
@@ -21,6 +20,7 @@ fn main() -> std::io::Result<()> {
     let floor_material = MaterialBuilder::default()
         .pattern(floor_pattern)
         .specular(0.)
+        .reflective(0.5)
         .build()
         .unwrap();
 
@@ -36,6 +36,7 @@ fn main() -> std::io::Result<()> {
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
+            .reflective(0.1)
             .pattern(middle_pattern)
             .build()
             .unwrap(),
@@ -43,12 +44,13 @@ fn main() -> std::io::Result<()> {
 
     let mut left = sphere!();
     left.set_transform(Matrix::translation(-1.5, 0.33, -0.55) * Matrix::scaling(0.33, 0.33, 0.33));
-    let mut left_pattern = gradient_pattern!(0.5, 1., 0.1; 1., 0.8, 0.1);
+    let mut left_pattern = solid!(YELLOW);
     left_pattern.set_transform(Matrix::rotation_z(PI / 2.));
     left.set_material(
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
+            .reflective(0.1)
             .pattern(left_pattern)
             .build()
             .unwrap(),
@@ -62,6 +64,7 @@ fn main() -> std::io::Result<()> {
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
+            .reflective(0.1)
             .pattern(right_pattern)
             .build()
             .unwrap(),
@@ -70,7 +73,7 @@ fn main() -> std::io::Result<()> {
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
     let world = World::new(light_source, vec![floor, middle, left, right]);
-    let hsize = 800;
+    let hsize = 800 * 2;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(
         point!(0., 1.5, -5.),
@@ -79,6 +82,6 @@ fn main() -> std::io::Result<()> {
     ));
 
     let canvas = camera.render(&world);
-    canvas.save("/tmp/10_patterns.png")?;
+    canvas.save("/tmp/11_reflection.png")?;
     Ok(())
 }
