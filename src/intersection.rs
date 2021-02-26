@@ -1,4 +1,4 @@
-use crate::{point, ray::Ray, shapes::Shape, tuple::Tuple, EPSILON};
+use crate::{ray::Ray, shapes::Shape, tuple::Tuple, EPSILON};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection<'a> {
@@ -11,12 +11,12 @@ pub struct PreparedComputations<'a> {
     pub t: f64,
     pub object: &'a Shape,
     pub point: Tuple,
+    pub under_point: Tuple,
     pub over_point: Tuple,
     pub eyev: Tuple,
     pub normalv: Tuple,
     pub inside: bool,
     pub reflectv: Tuple,
-    pub under_point: Tuple,
     pub n1: f64,
     pub n2: f64,
 }
@@ -48,50 +48,50 @@ impl Intersection<'_> {
         } else {
             (false, temp_normalv)
         };
+        let under_point = point - normalv * EPSILON;
         let over_point = point + normalv * EPSILON;
         let reflectv = r.direction.reflect(normalv);
-        let under_point = point!(0., 0., 0.);
 
         // compute n1 and n2
-        let mut n1 = 0.;
-        let mut n2 = 0.;
+        let mut n1 = 1.;
+        let mut n2 = 1.;
         let mut containers: Vec<&Shape> = vec![];
-        // for i in xs {
-        //     if i.t >= 0. {
-        //         if containers.is_empty() {
-        //             n1 = 1.;
-        //         } else {
-        //             n1 = containers.last().unwrap().material().refractive_index;
-        //         }
-        //     }
-        //     match containers.iter().position(|&o| o == i.object) {
-        //         Some(pos) => {
-        //             containers.remove(pos);
-        //         }
-        //         None => {
-        //             containers.push(i.object);
-        //         }
-        //     }
-        //     if i.t >= 0. {
-        //         if containers.is_empty() {
-        //             n2 = 1.;
-        //         } else {
-        //             n2 = containers.last().unwrap().material().refractive_index;
-        //         }
-        //         break;
-        //     }
-        // }
+        for i in xs {
+            if self == *i {
+                if containers.is_empty() {
+                    n1 = 1.;
+                } else {
+                    n1 = containers.last().unwrap().material().refractive_index;
+                }
+            }
+            match containers.iter().position(|&o| o == i.object) {
+                Some(pos) => {
+                    containers.remove(pos);
+                }
+                None => {
+                    containers.push(i.object);
+                }
+            }
+            if self == *i {
+                if containers.is_empty() {
+                    n2 = 1.;
+                } else {
+                    n2 = containers.last().unwrap().material().refractive_index;
+                }
+                break;
+            }
+        }
 
         PreparedComputations {
             t: self.t,
             object: self.object,
             point,
+            under_point,
             over_point,
             eyev,
             normalv,
             inside,
             reflectv,
-            under_point,
             n1,
             n2,
         }
@@ -204,7 +204,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn finding_n1_and_n2() {
         let mut a = sphere!();
         a.set_transform(Matrix::scaling(2., 2., 2.));
@@ -225,7 +224,7 @@ mod tests {
                 .unwrap(),
         );
         let mut c = sphere!();
-        c.set_transform(Matrix::scaling(0., 0., 0.25));
+        c.set_transform(Matrix::translation(0., 0., 0.25));
         c.set_material(
             MaterialBuilder::default()
                 .transparency(1.)
@@ -253,12 +252,26 @@ mod tests {
             (1.5, 1.0),
         ];
 
-        for (i, intersection) in xs_refs.iter().enumerate() {
+        for (i, intersection) in xs.iter().enumerate() {
             let comps = intersection.prepare_computations(&r, &xs_refs[..]);
-            // dbg!("comps: {:?}", comps);
             let (expected_n1, expected_n2) = expected_n1_n2s[i];
-            //assert_eq!(expected_n1, comps.n1);
-            //assert_eq!(expected_n2, comps.n2);
+            println!(
+                "i: {}, t: {}, expected_n1: {}, n1: {}, expected_n2: {}, n2: {}",
+                i, intersection.t, expected_n1, comps.n1, expected_n2, comps.n2
+            );
+            assert_eq!(expected_n1, comps.n1, "i = {}, t = {}", i, intersection.t);
+            assert_eq!(expected_n2, comps.n2, "i = {}, t = {}", i, intersection.t);
         }
+    }
+
+    #[test]
+    fn under_point_is_below_surface() {
+        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(0., 0., 1.));
+        let i = Intersection::new(5., &s);
+        let comps = i.prepare_computations(&r, &[&i]);
+        assert!(comps.under_point.z > -EPSILON / 2.);
+        assert!(comps.point.z < comps.under_point.z);
     }
 }

@@ -1,4 +1,5 @@
 use crate::{
+    color,
     color::Color,
     matrix::{Matrix, IDENTITY_MATRIX},
     shapes::Shape,
@@ -66,6 +67,7 @@ pub enum Pattern {
     Gradient(GradientPattern),
     Ring(RingPattern),
     Checkers(CheckersPattern),
+    Test(TestPattern),
 }
 
 impl Pattern {
@@ -82,6 +84,7 @@ impl Pattern {
             Pattern::Checkers(pattern) => {
                 pattern.color_at(self.to_pattern_point(object, world_point))
             }
+            Pattern::Test(pattern) => pattern.color_at(self.to_pattern_point(object, world_point)),
         }
     }
 
@@ -97,6 +100,7 @@ impl Pattern {
             Pattern::Gradient(pattern) => &pattern.transform,
             Pattern::Ring(pattern) => &pattern.transform,
             Pattern::Checkers(pattern) => &pattern.transform,
+            Pattern::Test(pattern) => &pattern.transform,
         }
     }
 
@@ -107,6 +111,7 @@ impl Pattern {
             Pattern::Gradient(pattern) => pattern.transform = transform,
             Pattern::Ring(pattern) => pattern.transform = transform,
             Pattern::Checkers(pattern) => pattern.transform = transform,
+            Pattern::Test(pattern) => pattern.transform = transform,
         }
     }
 }
@@ -206,6 +211,23 @@ impl CheckersPattern {
         } else {
             self.b
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct TestPattern {
+    transform: Matrix,
+}
+
+impl TestPattern {
+    pub fn new() -> Self {
+        Self {
+            transform: IDENTITY_MATRIX,
+        }
+    }
+
+    fn color_at(&self, p: Tuple) -> Color {
+        color!(p.x, p.y, p.z)
     }
 }
 
