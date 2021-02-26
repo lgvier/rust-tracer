@@ -82,6 +82,6 @@ fn main() -> std::io::Result<()> {
     ));
 
     let canvas = camera.render(&world);
-    canvas.save("/tmp/11_reflection.png")?;
+    canvas.save("/tmp/11a_reflection.png")?;
     Ok(())
 }
