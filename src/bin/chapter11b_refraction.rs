@@ -1,14 +1,14 @@
 use rust_tracer::{
     camera::Camera,
     checkers_pattern,
-    color::{Color, BLACK, BLUE, RED, WHITE},
+    color::{BLACK, RED, WHITE},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{CheckersPattern, Pattern, RingPattern, StripePattern},
-    plane, point, ring_pattern,
+    patterns::{CheckersPattern, Pattern},
+    plane, point,
     shapes::{Plane, Shape, Sphere},
-    solid, sphere, stripe_pattern,
+    solid, sphere,
     tuple::Tuple,
     vector,
     world::World,
@@ -16,68 +16,52 @@ use rust_tracer::{
 use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
-    let floor_pattern = checkers_pattern!(BLACK, WHITE);
-    let floor_material = MaterialBuilder::default()
-        .pattern(floor_pattern)
+    let mut floor_and_walls_pattern = checkers_pattern!(RED, WHITE);
+    floor_and_walls_pattern.set_transform(Matrix::scaling(0.15, 0.15, 0.15));
+    let floor_and_walls_material = MaterialBuilder::default()
+        .pattern(floor_and_walls_pattern)
         .specular(0.)
-        .reflective(0.5)
         .build()
         .unwrap();
 
     let mut floor = plane!();
     floor.set_transform(Matrix::scaling(10., 0.01, 10.));
-    floor.set_material(floor_material);
+    floor.set_material(floor_and_walls_material);
+
+    let mut left_wall = plane!();
+    left_wall.set_transform(
+        Matrix::translation(0., 0., 5.)
+            * Matrix::rotation_y(-PI / 4.)
+            * Matrix::rotation_x(PI / 2.)
+            * Matrix::scaling(10., 0.01, 10.),
+    );
+    left_wall.set_material(floor_and_walls_material);
+
+    let mut right_wall = plane!();
+    right_wall.set_transform(
+        Matrix::translation(0., 0., 5.)
+            * Matrix::rotation_y(PI / 4.)
+            * Matrix::rotation_x(PI / 2.)
+            * Matrix::scaling(10., 0.01, 10.),
+    );
+    right_wall.set_material(floor_and_walls_material);
 
     let mut middle = sphere!();
     middle.set_transform(Matrix::translation(-0.5, 1., 0.5));
-    let mut middle_pattern = stripe_pattern!(0.5, 1., 0.1; 1., 0.8, 0.1);
-    middle_pattern.set_transform(Matrix::scaling(0.5, 0.5, 0.5));
     middle.set_material(
         MaterialBuilder::default()
-            .diffuse(0.7)
-            .specular(0.3)
-            .reflective(0.1)
-            .transparency(0.7)
-            .refractive_index(1.5)
-            .pattern(middle_pattern)
-            .build()
-            .unwrap(),
-    );
-
-    let mut left = sphere!();
-    left.set_transform(Matrix::translation(-1.5, 0.33, -0.55) * Matrix::scaling(0.33, 0.33, 0.33));
-    let mut left_pattern = solid!(BLACK);
-    left_pattern.set_transform(Matrix::rotation_z(PI / 2.));
-    left.set_material(
-        MaterialBuilder::default()
-            .diffuse(0.7)
-            .specular(0.3)
-            .reflective(0.3)
+            .reflective(0.2)
             .transparency(1.0)
             .refractive_index(1.5)
-            .pattern(left_pattern)
-            .build()
-            .unwrap(),
-    );
-
-    let mut right = sphere!();
-    right.set_transform(Matrix::translation(1.5, 0.5, -0.5) * Matrix::scaling(0.5, 0.5, 0.5));
-    let mut right_pattern = ring_pattern!(RED, BLUE);
-    right_pattern.set_transform(Matrix::scaling(0.1, 0.1, 0.1) * Matrix::rotation_x(PI / 1.5));
-    right.set_material(
-        MaterialBuilder::default()
-            .diffuse(0.7)
-            .specular(0.3)
-            .reflective(0.1)
-            .pattern(right_pattern)
+            .pattern(solid!(BLACK))
             .build()
             .unwrap(),
     );
 
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
-    let world = World::new(light_source, vec![floor, middle, left, right]);
-    let hsize = 800 * 2;
+    let world = World::new(light_source, vec![floor, left_wall, right_wall, middle]);
+    let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(
         point!(0., 1.5, -5.),

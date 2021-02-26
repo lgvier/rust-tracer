@@ -44,14 +44,12 @@ fn main() -> std::io::Result<()> {
 
     let mut left = sphere!();
     left.set_transform(Matrix::translation(-1.5, 0.33, -0.55) * Matrix::scaling(0.33, 0.33, 0.33));
-    let mut left_pattern = solid!(YELLOW);
-    left_pattern.set_transform(Matrix::rotation_z(PI / 2.));
     left.set_material(
         MaterialBuilder::default()
             .diffuse(0.7)
             .specular(0.3)
             .reflective(0.1)
-            .pattern(left_pattern)
+            .pattern(solid!(YELLOW))
             .build()
             .unwrap(),
     );
