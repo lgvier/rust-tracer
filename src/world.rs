@@ -29,9 +29,11 @@ impl World {
 
     fn color_at_internal(&self, r: &Ray, remaining: usize) -> Color {
         let xs = self.intersect(&r);
+        let xs_refs = xs.iter().collect::<Vec<&Intersection>>();
+
         match xs.iter().find(|i| i.t >= 0.) {
             Some(i) => {
-                let comps = i.prepare_computations(&r);
+                let comps = i.prepare_computations(&r, &xs_refs[..]);
                 self.shade_hit(&comps, remaining)
             }
             None => BLACK,
@@ -39,16 +41,6 @@ impl World {
     }
 
     fn intersect(&self, r: &Ray) -> Vec<Intersection> {
-        // self.objects
-        //     .iter()
-        //     .flat_map(|object| {
-        //         object
-        //             .intersect(r)
-        //             .iter()
-        //             .map(move |t| Intersection::new(*t, object))
-        //     })
-        //     .sort...
-        //     .collect()
         let mut result = vec![];
         for object in &self.objects {
             for t in object.intersect(r) {
@@ -146,7 +138,7 @@ mod tests {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = &w.objects[0];
         let i = Intersection::new(4., s);
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), c);
     }
@@ -217,7 +209,7 @@ mod tests {
 
         let r = ray!(point!(0., 0., 5.), vector!(0., 0., 1.));
         let i = Intersection::new(4., &w.objects[1]);
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.1, 0.1, 0.1), c);
     }
@@ -236,7 +228,7 @@ mod tests {
 
         let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
         let i = Intersection::new(1., &w.objects[1]);
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(BLACK, color);
     }
@@ -256,7 +248,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.19033, 0.23791, 0.14274), color);
     }
@@ -275,7 +267,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.87676, 0.92434, 0.82917), c);
     }
@@ -309,7 +301,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.objects.last().unwrap());
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         let color = w.reflected_color(&comps, 0);
         assert_eq!(BLACK, color);
     }

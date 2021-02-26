@@ -14,6 +14,8 @@ const DEFAULT_MATERIAL: Material = Material {
     specular: 0.9,
     shininess: 200.,
     reflective: 0.,
+    transparency: 0.,
+    refractive_index: 1.,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Builder)]
@@ -25,6 +27,8 @@ pub struct Material {
     pub specular: f64,
     pub shininess: f64,
     pub reflective: f64,
+    pub transparency: f64,
+    pub refractive_index: f64,
 }
 
 impl Material {
@@ -35,6 +39,8 @@ impl Material {
         specular: f64,
         shininess: f64,
         reflective: f64,
+        transparency: f64,
+        refractive_index: f64,
     ) -> Self {
         Self {
             pattern,
@@ -43,6 +49,8 @@ impl Material {
             specular,
             shininess,
             reflective,
+            transparency,
+            refractive_index,
         }
     }
 
@@ -272,7 +280,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &shape);
-        let comps = i.prepare_computations(&r);
+        let comps = i.prepare_computations(&r, &[&i]);
         assert_eq!(
             vector!(0., 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
             comps.reflectv

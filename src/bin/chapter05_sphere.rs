@@ -3,6 +3,7 @@ use std::f64::consts::PI;
 use rust_tracer::{
     canvas::Canvas,
     color::RED,
+    intersection::Intersection,
     matrix::Matrix,
     point, ray,
     ray::Ray,
@@ -34,9 +35,15 @@ fn main() -> std::io::Result<()> {
             let position = point!(world_x, world_y, wall_z);
 
             let r = ray!(ray_origin, (position - ray_origin).normalize());
-            let xs = shape.hit(&r);
 
-            if xs.is_some() {
+            let xs = shape
+                .intersect(&r)
+                .iter()
+                .map(|t| Intersection::new(*t, &shape))
+                .collect::<Vec<Intersection>>();
+            let xs_refs = xs.iter().collect::<Vec<&Intersection>>();
+
+            if Intersection::hit(&xs_refs[..]).is_some() {
                 c.write_pixel(x, y, RED);
             }
         }

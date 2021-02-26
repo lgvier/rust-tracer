@@ -1,5 +1,4 @@
 use crate::{
-    intersection::Intersection,
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
     point,
@@ -40,15 +39,6 @@ impl Shape {
             Shape::Sphere(s) => s.local_intersect(&local_ray),
             Shape::Plane(p) => p.local_intersect(&local_ray),
         }
-    }
-
-    pub fn hit<'a>(&'a self, r: &Ray) -> Option<Intersection> {
-        let xs = self
-            .intersect(r)
-            .iter()
-            .map(|e| Intersection::new(*e, self))
-            .collect();
-        Intersection::hit(xs)
     }
 
     pub fn transform(&self) -> &Matrix {
