@@ -6,10 +6,7 @@ use crate::{
     tuple::Tuple,
     world::World,
 };
-use std::{
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::time::Instant;
 
 use rayon::prelude::*;
 
@@ -72,28 +69,31 @@ impl Camera {
         let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
 
-        // for y in 0..self.vsize {
-        let pixels = Arc::new(Mutex::new(Vec::new()));
-        (0..self.vsize).into_par_iter().for_each(|y| {
-            for x in 0..self.hsize {
-                let ray = self.ray_for_pixel(x, y);
-                let color = world.color_at(&ray);
-                // image.write_pixel(x, y, color);
-                pixels.lock().unwrap().push((x, y, color));
-            }
-            if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
-                println!(
-                    "Camera::render() y: {} of {} completed, elapsed time: {:?}",
-                    y,
-                    self.vsize,
-                    start.elapsed()
-                );
-            }
-        });
+        let pixels = (0..self.vsize)
+            .into_par_iter()
+            .flat_map(|y| {
+                if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
+                    println!(
+                        "Camera::render() y: {} of {}, elapsed time: {:?}",
+                        y,
+                        self.vsize,
+                        start.elapsed()
+                    );
+                }
+                (0..self.hsize)
+                    .into_iter()
+                    .map(move |x| {
+                        let ray = self.ray_for_pixel(x, y);
+                        let color = world.color_at(&ray);
+                        (x, y, color)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
 
-        for (x, y, color) in pixels.lock().unwrap().iter() {
-            image.write_pixel(*x, *y, *color);
-        }
+        pixels
+            .iter()
+            .for_each(|(x, y, color)| image.write_pixel(*x, *y, *color));
 
         println!("Camera::render() completed in {:?}", start.elapsed());
         image
