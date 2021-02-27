@@ -6,7 +6,12 @@ use crate::{
     tuple::Tuple,
     world::World,
 };
-use std::time::Instant;
+use std::{
+    sync::{Arc, Mutex},
+    time::Instant,
+};
+
+use rayon::prelude::*;
 
 pub struct Camera {
     pub hsize: usize,
@@ -66,21 +71,30 @@ impl Camera {
     pub fn render(&self, world: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
-        for y in 0..self.vsize {
+
+        // for y in 0..self.vsize {
+        let pixels = Arc::new(Mutex::new(Vec::new()));
+        (0..self.vsize).into_par_iter().for_each(|y| {
+            for x in 0..self.hsize {
+                let ray = self.ray_for_pixel(x, y);
+                let color = world.color_at(&ray);
+                // image.write_pixel(x, y, color);
+                pixels.lock().unwrap().push((x, y, color));
+            }
             if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
                 println!(
-                    "Camera::render() y: {} of {}, elapsed time: {:?}",
+                    "Camera::render() y: {} of {} completed, elapsed time: {:?}",
                     y,
                     self.vsize,
                     start.elapsed()
                 );
             }
-            for x in 0..self.hsize {
-                let ray = self.ray_for_pixel(x, y);
-                let color = world.color_at(&ray);
-                image.write_pixel(x, y, color);
-            }
+        });
+
+        for (x, y, color) in pixels.lock().unwrap().iter() {
+            image.write_pixel(*x, *y, *color);
         }
+
         println!("Camera::render() completed in {:?}", start.elapsed());
         image
     }
