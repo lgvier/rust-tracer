@@ -28,6 +28,13 @@ macro_rules! cube {
     };
 }
 
+#[macro_export]
+macro_rules! cylinder {
+    () => {
+        Shape::Cylinder(Cylinder::new())
+    };
+}
+
 /*
 enum vs boxed trait polymorphism:
 https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
@@ -38,6 +45,7 @@ pub enum Shape {
     Sphere(Sphere),
     Plane(Plane),
     Cube(Cube),
+    Cylinder(Cylinder),
 }
 
 impl Shape {
@@ -47,6 +55,7 @@ impl Shape {
             Shape::Sphere(s) => s.local_intersect(&local_ray),
             Shape::Plane(p) => p.local_intersect(&local_ray),
             Shape::Cube(c) => c.local_intersect(&local_ray),
+            Shape::Cylinder(c) => c.local_intersect(&local_ray),
         }
     }
 
@@ -55,6 +64,7 @@ impl Shape {
             Shape::Sphere(s) => &s.transform,
             Shape::Plane(p) => &p.transform,
             Shape::Cube(c) => &c.transform,
+            Shape::Cylinder(c) => &c.transform,
         }
     }
 
@@ -63,6 +73,7 @@ impl Shape {
             Shape::Sphere(s) => s.transform = transform,
             Shape::Plane(p) => p.transform = transform,
             Shape::Cube(c) => c.transform = transform,
+            Shape::Cylinder(c) => c.transform = transform,
         }
     }
 
@@ -73,6 +84,7 @@ impl Shape {
             Shape::Sphere(s) => s.local_normal_at(local_point),
             Shape::Plane(p) => p.local_normal_at(local_point),
             Shape::Cube(c) => c.local_normal_at(local_point),
+            Shape::Cylinder(c) => c.local_normal_at(local_point),
         };
         let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
         world_normal.normalize()
@@ -83,6 +95,7 @@ impl Shape {
             Shape::Sphere(s) => &s.material,
             Shape::Plane(p) => &p.material,
             Shape::Cube(c) => &c.material,
+            Shape::Cylinder(c) => &c.material,
         }
     }
 
@@ -91,6 +104,7 @@ impl Shape {
             Shape::Sphere(s) => s.material = material,
             Shape::Plane(p) => p.material = material,
             Shape::Cube(c) => c.material = material,
+            Shape::Cylinder(c) => c.material = material,
         }
     }
 }
@@ -223,10 +237,52 @@ impl Cube {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub struct Cylinder {
+    transform: Matrix,
+    material: Material,
+}
+
+impl Cylinder {
+    pub fn new() -> Self {
+        Cylinder {
+            transform: IDENTITY_MATRIX,
+            material: Material::default(),
+        }
+    }
+
+    fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+        let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
+        if a.abs() < EPSILON {
+            // ray is parallel to the y axis​
+            return vec![];
+        }
+
+        let b = 2. * local_ray.origin.x * local_ray.direction.x
+            + 2. * local_ray.origin.z * local_ray.direction.z;
+        let c = local_ray.origin.x.powi(2) + local_ray.origin.z.powi(2) - 1.;
+
+        let discriminant = b.powi(2) - 4. * a * c;
+
+        if discriminant < 0. {
+            // ray does not intersect the cylinder​
+            vec![]
+        } else {
+            let t1 = (-b - discriminant.sqrt()) / (2. * a);
+            let t2 = (-b + discriminant.sqrt()) / (2. * a);
+            vec![t1, t2]
+        }
+    }
+
+    fn local_normal_at(&self, local_point: Tuple) -> Tuple {
+        vector!(local_point.x, 0., local_point.z)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{material::MaterialBuilder, ray, vector};
+    use crate::{approx_eq, material::MaterialBuilder, ray, vector};
     use rand::Rng;
     use std::f64::consts::PI;
 
@@ -502,5 +558,67 @@ mod tests {
         t(point!(0.4, 0.4, -1.), vector!(0., 0., -1.));
         t(point!(1., 1., 1.), vector!(1., 0., 0.));
         t(point!(-1., -1., -1.), vector!(-1., 0., 0.));
+    }
+
+    #[test]
+    fn ray_misses_cylinder() {
+        let c = Cylinder::new();
+        let t = |origin: Tuple, direction: Tuple| {
+            let r = ray!(origin, direction.normalize());
+            let xs = c.local_intersect(&r);
+            assert!(
+                xs.is_empty(),
+                "origin: {:?}, direction: {:?}",
+                origin,
+                direction
+            );
+        };
+        t(point!(1., 0., 0.), vector!(0., 1., 0.));
+        t(point!(0., 0., 0.), vector!(0., 1., 0.));
+        t(point!(0., 0., -5.), vector!(1., 1., 1.));
+    }
+
+    #[test]
+    fn ray_strikes_cylinder() {
+        let c = Cylinder::new();
+        let t = |origin: Tuple, direction: Tuple, t1: f64, t2: f64| {
+            let r = ray!(origin, direction.normalize());
+            let xs = c.local_intersect(&r);
+            assert_eq!(
+                2,
+                xs.len(),
+                "origin: {:?}, direction: {:?}",
+                origin,
+                direction
+            );
+            assert!(
+                approx_eq(t1, dbg!(xs[0])),
+                "t1 for origin: {:?}, direction: {:?}",
+                origin,
+                direction
+            );
+            assert!(
+                approx_eq(t2, dbg!(xs[1])),
+                "t2 for origin: {:?}, direction: {:?}",
+                origin,
+                direction
+            );
+        };
+        t(point!(1., 0., -5.), vector!(0., 0., 1.), 5., 5.);
+        t(point!(0., 0., -5.), vector!(0., 0., 1.), 4., 6.);
+        t(point!(0.5, 0., -5.), vector!(0.1, 1., 1.), 6.80798, 7.08872);
+    }
+
+    #[test]
+    fn normal_vector_on_cylinder() {
+        let c = Cylinder::new();
+        let t = |point: Tuple, normal: Tuple| {
+            let n = c.local_normal_at(point);
+            assert_eq!(normal, n, "normal at {:?}", point);
+        };
+        t(point!(1., 0., 0.), vector!(1., 0., 0.));
+        t(point!(0., 5., -1.), vector!(0., 0., -1.));
+        t(point!(0., -2., 1.), vector!(0., 0., 1.));
+        t(point!(-1., 1., 0.), vector!(-1., 0., 0.));
     }
 }
