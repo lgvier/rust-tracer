@@ -63,7 +63,14 @@ impl World {
         );
         let reflected = self.reflected_color(comps, remaining);
         let refracted = self.refracted_color(comps, remaining);
-        surface + reflected + refracted
+
+        let material = comps.object.material();
+        if material.reflective > 0. && material.transparency > 0. {
+            let reflectance = comps.schlick();
+            surface + reflected * reflectance + refracted * (1. - reflectance)
+        } else {
+            surface + reflected + refracted
+        }
     }
 
     fn is_shadowed(&self, point: Tuple) -> bool {
@@ -465,5 +472,45 @@ mod tests {
         let comps = i.prepare_computations(&r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.93642, 0.68642, 0.68642), c);
+    }
+
+    #[test]
+    fn shade_hit_with_reflective_transparent_material() {
+        let mut w = World::default();
+
+        let mut floor = plane!();
+        floor.set_transform(Matrix::translation(0., -1., 0.));
+        floor.set_material(
+            MaterialBuilder::default()
+                .reflective(0.5)
+                .transparency(0.5)
+                .refractive_index(1.5)
+                .build()
+                .unwrap(),
+        );
+        w.objects.push(floor);
+
+        let mut ball = sphere!();
+        ball.set_material(
+            MaterialBuilder::default()
+                .pattern(solid!(RED))
+                .ambient(0.5)
+                .build()
+                .unwrap(),
+        );
+        ball.set_transform(Matrix::translation(0., -3.5, -0.5));
+        w.objects.push(ball);
+
+        let r = ray!(
+            point!(0., 0., -3.),
+            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+        );
+        let i = Intersection::new(
+            2f64.sqrt(),
+            &w.objects[w.objects.len() - 2], /* floor */
+        );
+        let comps = i.prepare_computations(&r, &[&i]);
+        let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
+        assert_eq!(color!(0.93391, 0.69643, 0.69243), c);
     }
 }

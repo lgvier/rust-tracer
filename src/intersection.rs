@@ -98,11 +98,31 @@ impl Intersection<'_> {
     }
 }
 
+impl PreparedComputations<'_> {
+    pub fn schlick(&self) -> f64 {
+        //  find the cosine of the angle between the eye and normal vectors​
+        let mut cos = self.eyev.dot(&self.normalv);
+        // total internal reflection can only occur if n1 > n2​
+        if self.n1 > self.n2 {
+            let n_ratio = self.n1 / self.n2;
+            let sin2_t = (n_ratio * n_ratio) * (1. - (cos * cos));
+            if sin2_t > 1. {
+                return 1.;
+            }
+            // when n1 > n2, use cos(theta_t) instead​
+            cos = (1. - sin2_t).sqrt();
+        }
+        let r0 = ((self.n1 - self.n2) / (self.n1 + self.n2)).powi(2);
+        r0 + (1. - r0) * (1. - cos).powi(5)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
-        material::MaterialBuilder, matrix::Matrix, point, ray, shapes::Sphere, sphere, vector,
+        approx_eq, color::BLACK, material::MaterialBuilder, matrix::Matrix, patterns::Pattern,
+        point, ray, shapes::Sphere, solid, sphere, vector,
     };
 
     #[test]
@@ -273,5 +293,61 @@ mod tests {
         let comps = i.prepare_computations(&r, &[&i]);
         assert!(comps.under_point.z > -EPSILON / 2.);
         assert!(comps.point.z < comps.under_point.z);
+    }
+
+    #[test]
+    fn schlick_approximation_under_total_internal_reflection() {
+        let mut shape = sphere!();
+        shape.set_material(
+            MaterialBuilder::default()
+                .pattern(solid!(BLACK))
+                .transparency(1.)
+                .refractive_index(1.5)
+                .build()
+                .unwrap(),
+        );
+        let r = ray!(0., 0., 2f64.sqrt() / 2.; 0., 1., 0.);
+        let i1 = Intersection::new(-2f64.sqrt() / 2., &shape);
+        let i2 = Intersection::new(2f64.sqrt() / 2., &shape);
+        let comps = i2.prepare_computations(&r, &[&i1, &i2]);
+        let reflectance = comps.schlick();
+        assert_eq!(1., reflectance);
+    }
+
+    #[test]
+    fn schlick_approximation_with_perpendicular_viewing_angle() {
+        let mut shape = sphere!();
+        shape.set_material(
+            MaterialBuilder::default()
+                .pattern(solid!(BLACK))
+                .transparency(1.)
+                .refractive_index(1.5)
+                .build()
+                .unwrap(),
+        );
+        let r = ray!(0., 0., 0.; 0., 1., 0.);
+        let i1 = Intersection::new(-1., &shape);
+        let i2 = Intersection::new(1., &shape);
+        let comps = i2.prepare_computations(&r, &[&i1, &i2]);
+        let reflectance = comps.schlick();
+        assert!(approx_eq(0.04, reflectance));
+    }
+
+    #[test]
+    fn schlick_approximation_with_small_angle_and_n2_gt_n1() {
+        let mut shape = sphere!();
+        shape.set_material(
+            MaterialBuilder::default()
+                .pattern(solid!(BLACK))
+                .transparency(1.)
+                .refractive_index(1.5)
+                .build()
+                .unwrap(),
+        );
+        let r = ray!(0., 0.99, -2.; 0., 0., 1.);
+        let i = Intersection::new(1.8589, &shape);
+        let comps = i.prepare_computations(&r, &[&i]);
+        let reflectance = comps.schlick();
+        assert!(approx_eq(0.48873, dbg!(reflectance)));
     }
 }
