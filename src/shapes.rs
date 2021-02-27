@@ -21,6 +21,13 @@ macro_rules! plane {
     };
 }
 
+#[macro_export]
+macro_rules! cube {
+    () => {
+        Shape::Cube(Cube::new())
+    };
+}
+
 /*
 enum vs boxed trait polymorphism:
 https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
@@ -30,6 +37,7 @@ https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-o
 pub enum Shape {
     Sphere(Sphere),
     Plane(Plane),
+    Cube(Cube),
 }
 
 impl Shape {
@@ -38,6 +46,7 @@ impl Shape {
         match self {
             Shape::Sphere(s) => s.local_intersect(&local_ray),
             Shape::Plane(p) => p.local_intersect(&local_ray),
+            Shape::Cube(c) => c.local_intersect(&local_ray),
         }
     }
 
@@ -45,6 +54,7 @@ impl Shape {
         match self {
             Shape::Sphere(s) => &s.transform,
             Shape::Plane(p) => &p.transform,
+            Shape::Cube(c) => &c.transform,
         }
     }
 
@@ -52,6 +62,7 @@ impl Shape {
         match self {
             Shape::Sphere(s) => s.transform = transform,
             Shape::Plane(p) => p.transform = transform,
+            Shape::Cube(c) => c.transform = transform,
         }
     }
 
@@ -61,6 +72,7 @@ impl Shape {
         let local_normal = match self {
             Shape::Sphere(s) => s.local_normal_at(local_point),
             Shape::Plane(p) => p.local_normal_at(local_point),
+            Shape::Cube(c) => c.local_normal_at(local_point),
         };
         let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
         world_normal.normalize()
@@ -70,6 +82,7 @@ impl Shape {
         match self {
             Shape::Sphere(s) => &s.material,
             Shape::Plane(p) => &p.material,
+            Shape::Cube(c) => &c.material,
         }
     }
 
@@ -77,6 +90,7 @@ impl Shape {
         match self {
             Shape::Sphere(s) => s.material = material,
             Shape::Plane(p) => p.material = material,
+            Shape::Cube(c) => c.material = material,
         }
     }
 }
@@ -143,6 +157,69 @@ impl Plane {
 
     fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
         vector!(0., 1., 0.)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Cube {
+    transform: Matrix,
+    material: Material,
+}
+
+impl Cube {
+    pub fn new() -> Self {
+        Cube {
+            transform: IDENTITY_MATRIX,
+            material: Material::default(),
+        }
+    }
+
+    fn local_intersect(&self, local_ray: &Ray) -> Vec<f64> {
+        let (xtmin, xtmax) = Cube::check_axis(local_ray.origin.x, local_ray.direction.x);
+        let (ytmin, ytmax) = Cube::check_axis(local_ray.origin.y, local_ray.direction.y);
+        let (ztmin, ztmax) = Cube::check_axis(local_ray.origin.z, local_ray.direction.z);
+        let tmin = xtmin.max(ytmin.max(ztmin));
+        let tmax = xtmax.min(ytmax.min(ztmax));
+        if tmin > tmax {
+            // miss
+            vec![]
+        } else {
+            vec![tmin, tmax]
+        }
+    }
+
+    fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
+        let tmin_numerator = -1. - origin;
+        let tmax_numerator = 1. - origin;
+
+        let (tmin, tmax) = if direction.abs() >= EPSILON {
+            (tmin_numerator / direction, tmax_numerator / direction)
+        } else {
+            (
+                tmin_numerator * f64::INFINITY,
+                tmax_numerator * f64::INFINITY,
+            )
+        };
+
+        if tmin > tmax {
+            (tmax, tmin)
+        } else {
+            (tmin, tmax)
+        }
+    }
+
+    fn local_normal_at(&self, local_point: Tuple) -> Tuple {
+        let x_abs = local_point.x.abs();
+        let y_abs = local_point.y.abs();
+        let z_abs = local_point.z.abs();
+        let maxc = x_abs.max(y_abs.max(z_abs));
+        if maxc == x_abs {
+            vector!(local_point.x, 0., 0.)
+        } else if maxc == y_abs {
+            vector!(0., local_point.y, 0.)
+        } else {
+            vector!(0., 0., local_point.z)
+        }
     }
 }
 
@@ -373,5 +450,57 @@ mod tests {
         let xs = p.local_intersect(&r);
         assert_eq!(1, xs.len());
         assert_eq!(1., xs[0]);
+    }
+
+    #[test]
+    fn ray_intersects_cube() {
+        let c = Cube::new();
+        let t = |desc, origin, direction, t1, t2| {
+            let r = ray!(origin, direction);
+            let xs = c.local_intersect(&r);
+            assert_eq!(2, xs.len(), "len {}", desc);
+            assert_eq!(xs[0], t1, "xs[0] {}", desc);
+            assert_eq!(xs[1], t2, "xs[1] {}", desc);
+        };
+        t("+x", point!(5., 0.5, 0.), vector!(-1., 0., 0.), 4., 6.);
+        t("-x", point!(-5., 0.5, 0.), vector!(1., 0., 0.), 4., 6.);
+        t("+y", point!(0.5, 5., 0.), vector!(0., -1., 0.), 4., 6.);
+        t("-y", point!(0.5, -5., 0.), vector!(0., 1., 0.), 4., 6.);
+        t("+z", point!(0.5, 0., 5.), vector!(0., 0., -1.), 4., 6.);
+        t("-z", point!(0.5, 0., -5.), vector!(0., 0., 1.), 4., 6.);
+        t("inside", point!(0., 0.5, 0.), vector!(0., 0., 1.), -1., 1.);
+    }
+
+    #[test]
+    fn ray_misses_cube() {
+        let c = Cube::new();
+        let t = |origin, direction| {
+            let r = ray!(origin, direction);
+            let xs = c.local_intersect(&r);
+            assert_eq!(0, xs.len(), "len {:?}, {:?}", origin, direction);
+        };
+        t(point!(-2., 0., 0.), vector!(0.2673, 0.5345, 0.8018));
+        t(point!(0., -2., 0.), vector!(0.8018, 0.2673, 0.5345));
+        t(point!(0., 0., -2.), vector!(0.5345, 0.8018, 0.2673));
+        t(point!(2., 0., 2.), vector!(0., 0., -1.));
+        t(point!(0., 2., 2.), vector!(0., -1., 0.));
+        t(point!(2., 2., 0.), vector!(-1., 0., 0.));
+    }
+
+    #[test]
+    fn normal_on_surface_of_cube() {
+        let c = Cube::new();
+        let t = |point, normal| {
+            let n = c.local_normal_at(point);
+            assert_eq!(normal, n, "normal for point: {:?}", point);
+        };
+        t(point!(1., 0.5, -0.8), vector!(1., 0., 0.));
+        t(point!(-1., -0.2, 0.9), vector!(-1., 0., 0.));
+        t(point!(-0.4, 1., -0.1), vector!(0., 1., 0.));
+        t(point!(0.3, -1., -0.7), vector!(0., -1., 0.));
+        t(point!(-0.6, 0.3, 1.), vector!(0., 0., 1.));
+        t(point!(0.4, 0.4, -1.), vector!(0., 0., -1.));
+        t(point!(1., 1., 1.), vector!(1., 0., 0.));
+        t(point!(-1., -1., -1.), vector!(-1., 0., 0.));
     }
 }
