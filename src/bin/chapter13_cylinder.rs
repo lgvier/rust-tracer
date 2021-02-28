@@ -73,9 +73,21 @@ fn main() -> std::io::Result<()> {
         back_wall.set_material(material);
     };
 
-    let mut left_obj = cylinder!();
-    left_obj.set_transform(Matrix::translation(-1.5, 1., 0.5));
+    let mut left_obj = cylinder!(0., 1.);
+    left_obj.set_transform(Matrix::translation(-3., 1., 0.5) * Matrix::rotation_z(PI / 2.));
     left_obj.set_material(
+        MaterialBuilder::default()
+            .ambient(0.01)
+            .diffuse(0.01)
+            .reflective(0.9)
+            .pattern(solid!(BLACK))
+            .build()
+            .unwrap(),
+    );
+
+    let mut center_obj = cylinder!(0., 1., true);
+    center_obj.set_transform(Matrix::translation(0.0, 1., 0.) * Matrix::rotation_z(PI / 1.3));
+    center_obj.set_material(
         MaterialBuilder::default()
             .ambient(0.01)
             .diffuse(0.01)
@@ -101,7 +113,9 @@ fn main() -> std::io::Result<()> {
 
     let world = World::new(
         light_source,
-        vec![floor, left_wall, right_wall, back_wall, left_obj, right_obj],
+        vec![
+            floor, left_wall, right_wall, back_wall, left_obj, center_obj, right_obj,
+        ],
     );
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
