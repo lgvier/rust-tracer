@@ -7,7 +7,7 @@ use rust_tracer::{
     matrix::Matrix,
     point, ray,
     ray::Ray,
-    shapes::{Shape, Sphere},
+    shapes::{sphere::Sphere, Shape},
     sphere,
     tuple::Tuple,
 };

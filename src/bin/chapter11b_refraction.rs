@@ -7,7 +7,7 @@ use rust_tracer::{
     matrix::Matrix,
     patterns::{CheckersPattern, Pattern},
     plane, point,
-    shapes::{Plane, Shape, Sphere},
+    shapes::{plane::Plane, sphere::Sphere, Shape},
     solid, sphere,
     tuple::Tuple,
     vector,

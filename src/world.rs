@@ -7,7 +7,7 @@ use crate::{
     patterns::Pattern,
     point, ray,
     ray::Ray,
-    shapes::{Shape, Sphere},
+    shapes::{sphere::Sphere, Shape},
     solid, sphere,
     tuple::Tuple,
     MAX_REFLECTION_RECURSION,
@@ -154,8 +154,8 @@ impl Default for World {
 mod tests {
     use super::*;
     use crate::{
-        color, color::RED, material::Material, patterns::TestPattern, plane, ray, shapes::Plane,
-        tuple::Tuple, vector,
+        color, color::RED, material::Material, patterns::TestPattern, plane, ray,
+        shapes::plane::Plane, tuple::Tuple, vector,
     };
 
     #[test]

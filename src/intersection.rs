@@ -122,7 +122,7 @@ mod tests {
     use super::*;
     use crate::{
         approx_eq, color::BLACK, material::MaterialBuilder, matrix::Matrix, patterns::Pattern,
-        point, ray, shapes::Sphere, solid, sphere, vector,
+        point, ray, shapes::sphere::Sphere, solid, sphere, vector,
     };
 
     #[test]

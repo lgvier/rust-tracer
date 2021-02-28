@@ -8,7 +8,7 @@ use rust_tracer::{
     matrix::Matrix,
     patterns::{CheckersPattern, Pattern, RingPattern},
     plane, point, ring_pattern,
-    shapes::{Cylinder, Plane, Shape},
+    shapes::{cylinder::Cylinder, plane::Plane, Shape},
     solid,
     tuple::Tuple,
     vector,

@@ -238,7 +238,7 @@ mod tests {
         color,
         color::{BLACK, WHITE},
         point,
-        shapes::{Shape, Sphere},
+        shapes::{sphere::Sphere, Shape},
         sphere,
     };
 

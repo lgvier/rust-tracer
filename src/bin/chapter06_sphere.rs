@@ -10,7 +10,7 @@ use rust_tracer::{
     patterns::Pattern,
     point, ray,
     ray::Ray,
-    shapes::{Shape, Sphere},
+    shapes::{sphere::Sphere, Shape},
     solid, sphere,
     tuple::Tuple,
 };

@@ -1,0 +1,163 @@
+pub mod cube;
+pub mod cylinder;
+pub mod plane;
+pub mod sphere;
+
+use crate::{
+    material::Material,
+    matrix::Matrix,
+    ray::Ray,
+    shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere},
+    tuple::Tuple,
+};
+
+#[macro_export]
+macro_rules! sphere {
+    () => {
+        Shape::Sphere(Sphere::new())
+    };
+}
+
+#[macro_export]
+macro_rules! plane {
+    () => {
+        Shape::Plane(Plane::new())
+    };
+}
+
+#[macro_export]
+macro_rules! cube {
+    () => {
+        Shape::Cube(Cube::new())
+    };
+}
+
+#[macro_export]
+macro_rules! cylinder {
+    () => {
+        Shape::Cylinder(Cylinder::new())
+    };
+    ($minimum:expr, $maximum:expr) => {
+        Shape::Cylinder(Cylinder::new_with_min_max($minimum, $maximum))
+    };
+    ($minimum:expr, $maximum:expr, $closed:expr) => {
+        Shape::Cylinder(Cylinder::new_with_min_max_closed(
+            $minimum, $maximum, $closed,
+        ))
+    };
+}
+
+/*
+enum vs boxed trait polymorphism:
+https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
+*/
+
+#[derive(Debug, PartialEq)]
+pub enum Shape {
+    Sphere(Sphere),
+    Plane(Plane),
+    Cube(Cube),
+    Cylinder(Cylinder),
+}
+
+impl Shape {
+    pub fn intersect<'a>(&'a self, r: &Ray) -> Vec<f64> {
+        let local_ray = r * self.transform().inverse().unwrap();
+        match self {
+            Shape::Sphere(s) => s.local_intersect(&local_ray),
+            Shape::Plane(p) => p.local_intersect(&local_ray),
+            Shape::Cube(c) => c.local_intersect(&local_ray),
+            Shape::Cylinder(c) => c.local_intersect(&local_ray),
+        }
+    }
+
+    pub fn transform(&self) -> &Matrix {
+        match self {
+            Shape::Sphere(s) => &s.transform,
+            Shape::Plane(p) => &p.transform,
+            Shape::Cube(c) => &c.transform,
+            Shape::Cylinder(c) => &c.transform,
+        }
+    }
+
+    pub fn set_transform(&mut self, transform: Matrix) {
+        match self {
+            Shape::Sphere(s) => s.transform = transform,
+            Shape::Plane(p) => p.transform = transform,
+            Shape::Cube(c) => c.transform = transform,
+            Shape::Cylinder(c) => c.transform = transform,
+        }
+    }
+
+    pub fn normal_at(&self, p: Tuple) -> Tuple {
+        let transform_inverse = self.transform().inverse().unwrap();
+        let local_point = transform_inverse * p;
+        let local_normal = match self {
+            Shape::Sphere(s) => s.local_normal_at(local_point),
+            Shape::Plane(p) => p.local_normal_at(local_point),
+            Shape::Cube(c) => c.local_normal_at(local_point),
+            Shape::Cylinder(c) => c.local_normal_at(local_point),
+        };
+        let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
+        world_normal.normalize()
+    }
+
+    pub fn material(&self) -> &Material {
+        match self {
+            Shape::Sphere(s) => &s.material,
+            Shape::Plane(p) => &p.material,
+            Shape::Cube(c) => &c.material,
+            Shape::Cylinder(c) => &c.material,
+        }
+    }
+
+    pub fn set_material(&mut self, material: Material) {
+        match self {
+            Shape::Sphere(s) => s.material = material,
+            Shape::Plane(p) => p.material = material,
+            Shape::Cube(c) => c.material = material,
+            Shape::Cylinder(c) => c.material = material,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, sphere};
+    use rand::Rng;
+
+    fn test_shape() -> Shape {
+        let mut rng = rand::thread_rng();
+        match rng.gen::<u8>() % 2 {
+            0 => sphere!(),
+            _ => plane!(),
+        }
+    }
+
+    #[test]
+    fn shape_default_transformation() {
+        let s = test_shape();
+        assert_eq!(&IDENTITY_MATRIX, s.transform());
+    }
+
+    #[test]
+    fn shape_assign_transformation() {
+        let mut s = test_shape();
+        s.set_transform(Matrix::translation(2., 3., 4.));
+        assert_eq!(&Matrix::translation(2., 3., 4.), s.transform());
+    }
+
+    #[test]
+    fn shape_default_material() {
+        let s = test_shape();
+        assert_eq!(&Material::default(), s.material());
+    }
+
+    #[test]
+    fn shape_assign_material() {
+        let mut s = test_shape();
+        s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
+        assert_eq!(1., s.material().ambient);
+    }
+}

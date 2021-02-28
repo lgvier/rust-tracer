@@ -112,7 +112,7 @@ mod tests {
         patterns::StripePattern,
         plane, point, ray,
         ray::Ray,
-        shapes::{Plane, Sphere},
+        shapes::{plane::Plane, sphere::Sphere},
         sphere, stripe_pattern, vector,
     };
 

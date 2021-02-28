@@ -17,7 +17,7 @@ fn main() -> std::io::Result<()> {
     let folder = "/tmp/04_clock";
     create_dir_all(folder)?;
 
-    loop {
+    for _ in 0..10 {
         let mut c = Canvas::new(size, size);
 
         let mut plot_line =
@@ -52,7 +52,7 @@ fn main() -> std::io::Result<()> {
         let path = format!("{}/{}_{}_{}.png", folder, hour, minute, second);
         c.save(path.as_ref())?;
 
-        thread::sleep(Duration::from_secs(10));
+        thread::sleep(Duration::from_secs(1));
     }
-    // Ok(())
+    Ok(())
 }
