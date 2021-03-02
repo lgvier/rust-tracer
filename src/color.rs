@@ -1,5 +1,5 @@
 use crate::approx_eq;
-use core::ops::{Add, Mul, Sub};
+use core::ops::{Add, Div, Mul, Sub};
 
 #[macro_export]
 macro_rules! color {
@@ -95,6 +95,14 @@ impl Mul<f64> for Color {
 
     fn mul(self, scalar: f64) -> Self {
         Color::new(self.r * scalar, self.g * scalar, self.b * scalar)
+    }
+}
+
+impl Div<f64> for Color {
+    type Output = Color;
+
+    fn div(self, rhs: f64) -> Self {
+        Color::new(self.r / rhs, self.g / rhs, self.b / rhs)
     }
 }
 

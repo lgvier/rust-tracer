@@ -69,7 +69,7 @@ fn main() -> std::io::Result<()> {
         vector!(0., 1., 0.),
     ));
 
-    let canvas = camera.render(&world);
+    let canvas = camera.render(&world, true);
     canvas.save("/tmp/09_plane.png")?;
     Ok(())
 }

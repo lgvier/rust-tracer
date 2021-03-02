@@ -1,5 +1,6 @@
 use crate::{
     canvas::Canvas,
+    color::Color,
     matrix::{Matrix, IDENTITY_MATRIX},
     point, ray,
     ray::Ray,
@@ -46,9 +47,13 @@ impl Camera {
     }
 
     pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
+        self.ray_for_pixel_with_offset(px, py, 0.5, 0.5)
+    }
+
+    fn ray_for_pixel_with_offset(&self, px: usize, py: usize, ox: f64, oy: f64) -> Ray {
         // offset from edge of the canvas to pixel's center
-        let xoffset = (px as f64 + 0.5) * self.pixel_size;
-        let yoffset = (py as f64 + 0.5) * self.pixel_size;
+        let xoffset = (px as f64 + ox) * self.pixel_size;
+        let yoffset = (py as f64 + oy) * self.pixel_size;
 
         // untransformed coordinates of the pixel in world space
         // camera looks toward -z, so +x is to the left
@@ -65,13 +70,17 @@ impl Camera {
         ray!(origin, direction)
     }
 
-    pub fn render(&self, world: &World) -> Canvas {
+    pub fn render(&self, world: &World, antialiasing: bool) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
 
         let pixels = (0..self.vsize)
             .into_par_iter()
             .flat_map(|y| {
+                let row = (0..self.hsize)
+                    .into_iter()
+                    .map(|x| (x, y, self.color_at(world, x, y, antialiasing)))
+                    .collect::<Vec<_>>();
                 if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
                     println!(
                         "Camera::render() y: {} of {}, elapsed time: {:?}",
@@ -80,14 +89,7 @@ impl Camera {
                         start.elapsed()
                     );
                 }
-                (0..self.hsize)
-                    .into_iter()
-                    .map(move |x| {
-                        let ray = self.ray_for_pixel(x, y);
-                        let color = world.color_at(&ray);
-                        (x, y, color)
-                    })
-                    .collect::<Vec<_>>()
+                row
             })
             .collect::<Vec<_>>();
 
@@ -97,6 +99,20 @@ impl Camera {
 
         println!("Camera::render() completed in {:?}", start.elapsed());
         image
+    }
+
+    fn color_at(&self, world: &World, x: usize, y: usize, antialiasing: bool) -> Color {
+        let color_center = world.color_at(&self.ray_for_pixel(x, y));
+        if antialiasing {
+            let mut color_sum = color_center;
+            for &(ox, oy) in &[(0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)] {
+                color_sum =
+                    color_sum + world.color_at(&self.ray_for_pixel_with_offset(x, y, ox, oy));
+            }
+            color_sum / 5.
+        } else {
+            color_center
+        }
     }
 }
 
@@ -159,7 +175,7 @@ mod tests {
         let to = point!(0., 0., 0.);
         let up = point!(0., 1., 0.);
         c.set_transform(Matrix::view_transform(from, to, up));
-        let image = c.render(&w);
+        let image = c.render(&w, false);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), image.pixel_at(5, 5));
     }
 }
