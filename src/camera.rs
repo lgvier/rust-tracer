@@ -9,6 +9,8 @@ use crate::{
 };
 use std::time::Instant;
 
+use indicatif::HumanDuration;
+use indicatif::ProgressBar;
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -71,8 +73,10 @@ impl Camera {
     }
 
     pub fn render(&self, world: &World, antialiasing: bool) -> Canvas {
+        println!("Rendering...");
         let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
+        let progress_bar = ProgressBar::new(self.vsize as u64);
 
         let pixels = (0..self.vsize)
             .into_par_iter()
@@ -81,14 +85,7 @@ impl Camera {
                     .into_iter()
                     .map(|x| (x, y, self.color_at(world, x, y, antialiasing)))
                     .collect::<Vec<_>>();
-                if y > 0 && self.vsize > 20 && y % (self.vsize / 20) == 0 {
-                    println!(
-                        "Camera::render() y: {} of {}, elapsed time: {:?}",
-                        y,
-                        self.vsize,
-                        start.elapsed()
-                    );
-                }
+                progress_bar.inc(1);
                 row
             })
             .collect::<Vec<_>>();
@@ -97,7 +94,8 @@ impl Camera {
             .iter()
             .for_each(|(x, y, color)| image.write_pixel(*x, *y, *color));
 
-        println!("Camera::render() completed in {:?}", start.elapsed());
+        progress_bar.finish();
+        println!("Completed in {}", HumanDuration(start.elapsed()));
         image
     }
 
