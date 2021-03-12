@@ -1,16 +1,11 @@
 use rust_tracer::{
     camera::Camera,
     checkers_pattern,
-    color::{Color, BLACK, BLUE, RED, WHITE, YELLOW},
+    color::{BLACK, BLUE, RED, WHITE, YELLOW},
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{CheckersPattern, Pattern, RingPattern, StripePattern},
-    plane, point, ring_pattern,
-    shapes::{plane::Plane, sphere::Sphere, Shape},
-    solid, sphere, stripe_pattern,
-    tuple::Tuple,
-    vector,
+    plane, point, ring_pattern, solid, sphere, stripe_pattern, vector,
     world::World,
 };
 use std::f64::consts::PI;

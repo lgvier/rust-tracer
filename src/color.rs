@@ -6,7 +6,7 @@ use std::str::FromStr;
 #[macro_export]
 macro_rules! color {
     ($r:expr, $g:expr, $b:expr) => {
-        Color::new($r, $g, $b)
+        $crate::color::Color::new($r, $g, $b)
     };
 }
 

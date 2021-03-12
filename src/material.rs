@@ -106,14 +106,8 @@ impl Default for Material {
 mod tests {
     use super::*;
     use crate::{
-        color,
-        color::GREEN,
-        intersection::Intersection,
-        patterns::StripePattern,
-        plane, point, ray,
-        ray::Ray,
-        shapes::{plane::Plane, sphere::Sphere},
-        sphere, stripe_pattern, vector,
+        color, color::GREEN, intersection::Intersection, plane, point, ray, sphere, stripe_pattern,
+        vector,
     };
 
     #[test]

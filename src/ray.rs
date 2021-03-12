@@ -5,11 +5,13 @@ use std::ops::Mul;
 macro_rules! ray {
     // ray!(2., 3., 4.; 1., 0., 0.);
     ($($origin: expr),+; $($direction: expr),+) => {
-        Ray::new(Tuple::point($($origin),*), Tuple::vector($($direction),*))
+        $crate::ray::Ray::new(
+            $crate::tuple::Tuple::point($($origin),*),
+            $crate::tuple::Tuple::vector($($direction),*))
     };
     // ray!(origin, direction)
     ($origin:expr, $direction:expr) => {
-        Ray::new($origin, $direction)
+        $crate::ray::Ray::new($origin, $direction)
     };
 }
 

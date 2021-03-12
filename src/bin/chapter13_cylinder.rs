@@ -7,12 +7,7 @@ use rust_tracer::{
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
-    patterns::{CheckersPattern, Pattern, RingPattern},
-    plane, point, ring_pattern,
-    shapes::{cone::Cone, cylinder::Cylinder, plane::Plane, Shape},
-    solid,
-    tuple::Tuple,
-    vector,
+    plane, point, ring_pattern, solid, vector,
     world::World,
 };
 use std::{f64::consts::PI, str::FromStr};

@@ -1,15 +1,7 @@
 use std::f64::consts::PI;
 
 use rust_tracer::{
-    canvas::Canvas,
-    color::RED,
-    intersection::Intersection,
-    matrix::Matrix,
-    point, ray,
-    ray::Ray,
-    shapes::{sphere::Sphere, Shape},
-    sphere,
-    tuple::Tuple,
+    canvas::Canvas, color::RED, intersection::Intersection, matrix::Matrix, point, ray, sphere,
 };
 
 fn main() -> std::io::Result<()> {

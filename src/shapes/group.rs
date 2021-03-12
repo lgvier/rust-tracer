@@ -16,11 +16,15 @@ pub struct Group {
 }
 
 impl<'a> Group {
-    pub fn new() -> Self {
+    pub fn new(children: Vec<Shape>) -> Self {
         Self {
             transform: IDENTITY_MATRIX,
-            children: Vec::new(),
+            children,
         }
+    }
+
+    pub fn empty() -> Self {
+        Group::new(Vec::new())
     }
 
     pub fn add(&mut self, child: Shape) {
@@ -50,48 +54,50 @@ impl<'a> Group {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ray, ray::Ray, shapes::sphere::Sphere, sphere};
+    use crate::{group, ray, sphere};
 
     #[test]
     fn group() {
-        let mut group = Group::new();
+        let mut group = Group::empty();
         let sphere = sphere!();
         group.add(sphere);
     }
 
     #[test]
     fn intersect_non_empty_group() {
-        let mut group = Group::new();
-        let s1 = sphere!();
-        let mut s2 = sphere!();
-        s2.set_transform(Matrix::translation(0., 0., -3.));
-        let mut s3 = sphere!();
+        let mut s1 = sphere!();
+        let s1_transform = IDENTITY_MATRIX;
+        s1.set_transform(s1_transform);
 
+        let mut s2 = sphere!();
+        let s2_transform = Matrix::translation(0., 0., -3.);
+        s2.set_transform(s2_transform);
+
+        let mut s3 = sphere!();
         s3.set_transform(Matrix::translation(5., 0., 0.));
-        group.add(s1);
-        group.add(s2);
-        group.add(s3);
+
+        let group = Group::new(vec![s1, s2, s3]);
 
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let xs = group.local_intersect(&r);
 
         assert_eq!(4, xs.len());
+        assert_eq!(&s2_transform, xs[0].object.transform());
+        assert_eq!(&s2_transform, xs[1].object.transform());
+        assert_eq!(&s1_transform, xs[2].object.transform());
+        assert_eq!(&s1_transform, xs[3].object.transform());
     }
 
     #[test]
     fn intersect_transformed_group() {
-        let mut group = Group::new();
-
         let mut sphere = sphere!();
         sphere.set_transform(Matrix::translation(5., 0., 0.));
-        group.add(sphere);
+
+        let mut group = group!(sphere);
+        group.set_transform(Matrix::scaling(2., 2., 2.));
 
         let r = ray!(10., 0., 10.; 0., 0., 1.);
-
-        let mut group_shape = Shape::Group(group);
-        group_shape.set_transform(Matrix::scaling(2., 2., 2.));
-
-        let xs = group_shape.intersect(&r);
+        let xs = group.intersect(&r);
         assert_eq!(2, xs.len());
     }
 }

@@ -19,57 +19,72 @@ use crate::{
 #[macro_export]
 macro_rules! sphere {
     () => {
-        Shape::Sphere(Sphere::new())
+        $crate::shapes::Shape::Sphere($crate::shapes::sphere::Sphere::new())
     };
 }
 
 #[macro_export]
 macro_rules! plane {
     () => {
-        Shape::Plane(Plane::new())
+        $crate::shapes::Shape::Plane($crate::shapes::plane::Plane::new())
     };
 }
 
 #[macro_export]
 macro_rules! cube {
     () => {
-        Shape::Cube(Cube::new())
+        $crate::shapes::Shape::Cube($crate::shapes::cube::Cube::new())
     };
 }
 
 #[macro_export]
 macro_rules! cylinder {
     () => {
-        Shape::Cylinder(Cylinder::new())
+        $crate::shapes::Shape::Cylinder($crate::shapes::cylinder::Cylinder::new())
     };
     ($minimum:expr, $maximum:expr) => {
-        Shape::Cylinder(Cylinder::new_with_min_max($minimum, $maximum))
+        $crate::shapes::Shape::Cylinder($crate::shapes::cylinder::Cylinder::new_with_min_max(
+            $minimum, $maximum,
+        ))
     };
     ($minimum:expr, $maximum:expr, $closed:expr) => {
-        Shape::Cylinder(Cylinder::new_with_min_max_closed(
-            $minimum, $maximum, $closed,
-        ))
+        $crate::shapes::Shape::Cylinder(
+            $crate::shapes::cylinder::Cylinder::new_with_min_max_closed(
+                $minimum, $maximum, $closed,
+            ),
+        )
     };
 }
 
 #[macro_export]
 macro_rules! cone {
     () => {
-        Shape::Cone(Cone::new())
+        $crate::shapes::Shape::Cone($crate::shapes::cone::Cone::new())
     };
     ($minimum:expr, $maximum:expr) => {
-        Shape::Cone(Cone::new_with_min_max($minimum, $maximum))
+        $crate::shapes::Shape::Cone($crate::shapes::cone::Cone::new_with_min_max(
+            $minimum, $maximum,
+        ))
     };
     ($minimum:expr, $maximum:expr, $closed:expr) => {
-        Shape::Cone(Cone::new_with_min_max_closed($minimum, $maximum, $closed))
+        $crate::shapes::Shape::Cone($crate::shapes::cone::Cone::new_with_min_max_closed(
+            $minimum, $maximum, $closed,
+        ))
     };
 }
 
 #[macro_export]
 macro_rules! group {
-    () => {
-        Shape::Group(Group::new())
-    };
+    // group!()
+    () => (
+        $crate::shapes::Shape::Group($crate::shapes::group::Group::empty())
+    );
+    // group!(shape1, shape2)
+    ($($x:expr),+ $(,)?) => (
+        $crate::shapes::Shape::Group($crate::shapes::group::Group::new(
+            // copied from Rust's vec! macro
+            <[_]>::into_vec(Box::new([$($x),+]))))
+    );
 }
 
 /*

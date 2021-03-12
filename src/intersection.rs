@@ -125,8 +125,8 @@ impl PreparedComputations<'_> {
 mod tests {
     use super::*;
     use crate::{
-        approx_eq, color::BLACK, material::MaterialBuilder, matrix::Matrix, patterns::Pattern,
-        point, ray, shapes::sphere::Sphere, solid, sphere, vector,
+        approx_eq, color::BLACK, material::MaterialBuilder, matrix::Matrix, point, ray, solid,
+        sphere, vector,
     };
 
     #[test]

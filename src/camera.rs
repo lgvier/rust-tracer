@@ -4,7 +4,6 @@ use crate::{
     matrix::{Matrix, IDENTITY_MATRIX},
     point, ray,
     ray::Ray,
-    tuple::Tuple,
     world::World,
 };
 use std::time::Instant;
@@ -125,7 +124,7 @@ impl Camera {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{approx_eq, color, color::Color, vector};
+    use crate::{approx_eq, color, vector};
     use std::f64::consts::PI;
 
     #[test]

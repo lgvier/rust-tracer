@@ -5,7 +5,6 @@ use rust_tracer::{
     canvas::Canvas,
     color::{Color, BLUE, GREEN, RED, WHITE},
     point,
-    tuple::Tuple,
 };
 
 fn main() -> std::io::Result<()> {

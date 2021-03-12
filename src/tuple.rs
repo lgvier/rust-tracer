@@ -5,19 +5,19 @@ use std::fmt;
 #[macro_export]
 macro_rules! point {
     () => {
-        Tuple::point(0., 0., 0.)
+        $crate::tuple::Tuple::point(0., 0., 0.)
     };
     ($x:expr, $y:expr, $z:expr) => {
-        Tuple::point($x, $y, $z)
+        $crate::tuple::Tuple::point($x, $y, $z)
     };
 }
 #[macro_export]
 macro_rules! vector {
     () => {
-        Tuple::vector(0., 0., 0.)
+        $crate::tuple::Tuple::vector(0., 0., 0.)
     };
     ($x:expr, $y:expr, $z:expr) => {
-        Tuple::vector($x, $y, $z)
+        $crate::tuple::Tuple::vector($x, $y, $z)
     };
 }
 

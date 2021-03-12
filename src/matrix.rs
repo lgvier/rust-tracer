@@ -5,28 +5,28 @@ use std::fmt;
 #[macro_export]
 macro_rules! matrix {
     () => {
-        Matrix::empty(4);
+        $crate::matrix::Matrix::empty(4);
     };
     ($($($x: expr),+);+) => {
-        Matrix::new($([$($x),*]),*);
+        $crate::matrix::Matrix::new($([$($x),*]),*);
     }
 }
 #[macro_export]
 macro_rules! matrix2 {
     () => {
-        Matrix::empty(2);
+        $crate::matrix::Matrix::empty(2);
     };
     ($($($x: expr),+);+) => {
-        Matrix::new2($([$($x),*]),*);
+        $crate::matrix::Matrix::new2($([$($x),*]),*);
     }
 }
 #[macro_export]
 macro_rules! matrix3 {
     () => {
-        Matrix::empty(3);
+        $crate::matrix::Matrix::empty(3);
     };
     ($($($x: expr),+);+) => {
-        Matrix::new3($([$($x),*]),*);
+        $crate::matrix::Matrix::new3($([$($x),*]),*);
     }
 }
 

@@ -45,7 +45,7 @@ impl Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{material::MaterialBuilder, ray, shapes::Shape, sphere, vector};
+    use crate::{material::MaterialBuilder, ray, sphere, vector};
     use std::f64::consts::PI;
 
     #[test]

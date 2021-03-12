@@ -9,54 +9,58 @@ use crate::{
 #[macro_export]
 macro_rules! solid {
     ($color:expr) => {
-        Pattern::Solid($color)
+        $crate::patterns::Pattern::Solid($color)
     };
     ($r:expr, $g: expr, $b:expr) => {
-        Pattern::Solid(Color::new($r, $g, $b));
+        $crate::patterns::Pattern::Solid($crate::color::Color::new($r, $g, $b));
     };
 }
 
 #[macro_export]
 macro_rules! stripe_pattern {
     ($a:expr, $b:expr) => {
-        Pattern::Stripes(StripePattern::new($a, $b))
+        $crate::patterns::Pattern::Stripes($crate::patterns::StripePattern::new($a, $b))
     };
     // stripe_pattern!(0.1, 1., 0.5; 1., 0.8, 0.1)
     ($($a: expr),+; $($b: expr),+) => {
-        Pattern::Stripes(StripePattern::new(Color::new($($a),*), Color::new($($b),*)))
+        $crate::patterns::Pattern::Stripes($crate::patterns::StripePattern::new(
+            $crate::color::Color::new($($a),*), $crate::color::Color::new($($b),*)))
     };
 }
 
 #[macro_export]
 macro_rules! gradient_pattern {
     ($a:expr, $b:expr) => {
-        Pattern::Gradient(GradientPattern::new($a, $b))
+        $crate::patterns::Pattern::Gradient($crate::patterns::GradientPattern::new($a, $b))
     };
     // gradient_pattern!(0.1, 1., 0.5; 1., 0.8, 0.1)
     ($($a: expr),+; $($b: expr),+) => {
-        Pattern::Gradient(GradientPattern::new(Color::new($($a),*), Color::new($($b),*)))
+        $crate::patterns::Pattern::Gradient($crate::patterns::GradientPattern::new(
+            $crate::color::Color::new($($a),*), $crate::color::Color::new($($b),*)))
     };
 }
 
 #[macro_export]
 macro_rules! ring_pattern {
     ($a:expr, $b:expr) => {
-        Pattern::Ring(RingPattern::new($a, $b))
+        $crate::patterns::Pattern::Ring($crate::patterns::RingPattern::new($a, $b))
     };
     // ring_pattern!(0.1, 1., 0.5; 1., 0.8, 0.1)
     ($($a: expr),+; $($b: expr),+) => {
-        Pattern::Ring(RingPattern::new(Color::new($($a),*), Color::new($($b),*)))
+        $crate::patterns::Pattern::Ring($crate::patterns::RingPattern::new(
+            $crate::color::Color::new($($a),*), $crate::color::Color::new($($b),*)))
     };
 }
 
 #[macro_export]
 macro_rules! checkers_pattern {
     ($a:expr, $b:expr) => {
-        Pattern::Checkers(CheckersPattern::new($a, $b))
+        $crate::patterns::Pattern::Checkers($crate::patterns::CheckersPattern::new($a, $b))
     };
     // checkers_pattern!(0.1, 1., 0.5; 1., 0.8, 0.1)
     ($($a: expr),+; $($b: expr),+) => {
-        Pattern::Checkers(CheckersPattern::new(Color::new($($a),*), Color::new($($b),*)))
+        $crate::patterns::Pattern::Checkers($crate::patterns::CheckersPattern::new(
+            $crate::color::Color::new($($a),*), $crate::color::Color::new($($b),*)))
     };
 }
 
@@ -237,9 +241,7 @@ mod tests {
     use crate::{
         color,
         color::{BLACK, WHITE},
-        point,
-        shapes::{sphere::Sphere, Shape},
-        sphere,
+        point, sphere,
     };
 
     #[test]
