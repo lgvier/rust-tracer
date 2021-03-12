@@ -73,10 +73,13 @@ impl Camera {
     }
 
     pub fn render(&self, world: &World, antialiasing: bool) -> Canvas {
-        println!("Rendering...");
-        let mut image = Canvas::new(self.hsize, self.vsize);
         let start = Instant::now();
-        let progress_bar = ProgressBar::new(self.vsize as u64);
+        let progress_bar = if self.vsize > 50 {
+            println!("Rendering...");
+            Some(ProgressBar::new(self.vsize as u64))
+        } else {
+            None
+        };
 
         let pixels = (0..self.vsize)
             .into_par_iter()
@@ -85,17 +88,22 @@ impl Camera {
                     .into_iter()
                     .map(|x| (x, y, self.color_at(world, x, y, antialiasing)))
                     .collect::<Vec<_>>();
-                progress_bar.inc(1);
+                if let Some(pb) = &progress_bar {
+                    pb.inc(1);
+                }
                 row
             })
             .collect::<Vec<_>>();
 
+        let mut image = Canvas::new(self.hsize, self.vsize);
         pixels
             .iter()
             .for_each(|(x, y, color)| image.write_pixel(*x, *y, *color));
 
-        progress_bar.finish();
-        println!("Completed in {}", HumanDuration(start.elapsed()));
+        if let Some(pb) = &progress_bar {
+            pb.finish();
+            println!("Completed in {}", HumanDuration(start.elapsed()));
+        }
         image
     }
 
@@ -103,7 +111,7 @@ impl Camera {
         let color_center = world.color_at(&self.ray_for_pixel(x, y));
         if antialiasing {
             let mut color_sum = color_center;
-            for &(ox, oy) in &[(0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)] {
+            for &(ox, oy) in &[(0.20, 0.20), (0.80, 0.20), (0.20, 0.80), (0.80, 0.80)] {
                 color_sum =
                     color_sum + world.color_at(&self.ray_for_pixel_with_offset(x, y, ox, oy));
             }

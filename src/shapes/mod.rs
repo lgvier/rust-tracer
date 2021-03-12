@@ -1,3 +1,4 @@
+pub mod cone;
 pub mod cube;
 pub mod cylinder;
 pub mod plane;
@@ -7,7 +8,7 @@ use crate::{
     material::Material,
     matrix::Matrix,
     ray::Ray,
-    shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere},
+    shapes::{cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere},
     tuple::Tuple,
 };
 
@@ -47,6 +48,19 @@ macro_rules! cylinder {
     };
 }
 
+#[macro_export]
+macro_rules! cone {
+    () => {
+        Shape::Cone(Cone::new())
+    };
+    ($minimum:expr, $maximum:expr) => {
+        Shape::Cone(Cone::new_with_min_max($minimum, $maximum))
+    };
+    ($minimum:expr, $maximum:expr, $closed:expr) => {
+        Shape::Cone(Cone::new_with_min_max_closed($minimum, $maximum, $closed))
+    };
+}
+
 /*
 enum vs boxed trait polymorphism:
 https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
@@ -58,6 +72,7 @@ pub enum Shape {
     Plane(Plane),
     Cube(Cube),
     Cylinder(Cylinder),
+    Cone(Cone),
 }
 
 impl Shape {
@@ -68,6 +83,7 @@ impl Shape {
             Shape::Plane(p) => p.local_intersect(&local_ray),
             Shape::Cube(c) => c.local_intersect(&local_ray),
             Shape::Cylinder(c) => c.local_intersect(&local_ray),
+            Shape::Cone(c) => c.local_intersect(&local_ray),
         }
     }
 
@@ -77,6 +93,7 @@ impl Shape {
             Shape::Plane(p) => &p.transform,
             Shape::Cube(c) => &c.transform,
             Shape::Cylinder(c) => &c.transform,
+            Shape::Cone(c) => &c.transform,
         }
     }
 
@@ -86,6 +103,7 @@ impl Shape {
             Shape::Plane(p) => p.transform = transform,
             Shape::Cube(c) => c.transform = transform,
             Shape::Cylinder(c) => c.transform = transform,
+            Shape::Cone(c) => c.transform = transform,
         }
     }
 
@@ -97,6 +115,7 @@ impl Shape {
             Shape::Plane(p) => p.local_normal_at(local_point),
             Shape::Cube(c) => c.local_normal_at(local_point),
             Shape::Cylinder(c) => c.local_normal_at(local_point),
+            Shape::Cone(c) => c.local_normal_at(local_point),
         };
         let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
         world_normal.normalize()
@@ -108,6 +127,7 @@ impl Shape {
             Shape::Plane(p) => &p.material,
             Shape::Cube(c) => &c.material,
             Shape::Cylinder(c) => &c.material,
+            Shape::Cone(c) => &c.material,
         }
     }
 
@@ -117,6 +137,7 @@ impl Shape {
             Shape::Plane(p) => p.material = material,
             Shape::Cube(c) => c.material = material,
             Shape::Cylinder(c) => c.material = material,
+            Shape::Cone(c) => c.material = material,
         }
     }
 }

@@ -1,20 +1,29 @@
+use rand::Rng;
 use rust_tracer::{
     camera::Camera,
     checkers_pattern,
-    color::{BLACK, BLUE, GREEN, RED, WHITE, YELLOW},
-    cylinder,
+    color::{Color, BLACK, WHITE},
+    cone, cylinder,
     light::PointLight,
     material::MaterialBuilder,
     matrix::Matrix,
     patterns::{CheckersPattern, Pattern, RingPattern},
     plane, point, ring_pattern,
-    shapes::{cylinder::Cylinder, plane::Plane, Shape},
+    shapes::{cone::Cone, cylinder::Cylinder, plane::Plane, Shape},
     solid,
     tuple::Tuple,
     vector,
     world::World,
 };
-use std::f64::consts::PI;
+use std::{f64::consts::PI, str::FromStr};
+
+const COLOR_PALETTE: &[&str] = &["#E27D60", "#85DCB", "#E8A87C", "#C38D9E", "#41B3A3"];
+
+fn random_color() -> Color {
+    let mut rng = rand::thread_rng();
+    let idx = rng.gen_range(0..COLOR_PALETTE.len() - 1);
+    Color::from_str(COLOR_PALETTE[idx]).unwrap()
+}
 
 fn main() -> std::io::Result<()> {
     let mut floor = plane!();
@@ -39,7 +48,7 @@ fn main() -> std::io::Result<()> {
             * Matrix::scaling(10., 0.01, 10.),
     );
     {
-        let mut pattern = checkers_pattern!(RED, WHITE);
+        let mut pattern = checkers_pattern!(random_color(), random_color());
         pattern.set_transform(Matrix::scaling(0.05, 0.05, 0.05));
         let material = MaterialBuilder::default().pattern(pattern).build().unwrap();
         left_wall.set_material(material);
@@ -53,7 +62,7 @@ fn main() -> std::io::Result<()> {
             * Matrix::scaling(10., 0.01, 10.),
     );
     {
-        let mut pattern = checkers_pattern!(GREEN, YELLOW);
+        let mut pattern = checkers_pattern!(random_color(), random_color());
         pattern.set_transform(Matrix::scaling(0.05, 0.05, 0.05));
         let material = MaterialBuilder::default().pattern(pattern).build().unwrap();
         right_wall.set_material(material);
@@ -67,7 +76,7 @@ fn main() -> std::io::Result<()> {
             * Matrix::scaling(10., 0.01, 10.),
     );
     {
-        let mut pattern = ring_pattern!(WHITE, BLUE);
+        let mut pattern = ring_pattern!(random_color(), random_color());
         pattern.set_transform(Matrix::scaling(0.05, 0.05, 0.05));
         let material = MaterialBuilder::default().pattern(pattern).build().unwrap();
         back_wall.set_material(material);
@@ -80,7 +89,7 @@ fn main() -> std::io::Result<()> {
             .ambient(0.01)
             .diffuse(0.01)
             .reflective(0.9)
-            .pattern(solid!(BLACK))
+            .pattern(solid!(random_color()))
             .build()
             .unwrap(),
     );
@@ -92,7 +101,7 @@ fn main() -> std::io::Result<()> {
             .ambient(0.01)
             .diffuse(0.01)
             .reflective(0.9)
-            .pattern(solid!(BLACK))
+            .pattern(solid!(random_color()))
             .build()
             .unwrap(),
     );
@@ -104,7 +113,19 @@ fn main() -> std::io::Result<()> {
             .reflective(0.2)
             .transparency(0.2)
             .refractive_index(1.5)
-            .pattern(solid!(BLUE))
+            .pattern(solid!(random_color()))
+            .build()
+            .unwrap(),
+    );
+
+    let mut right_obj2 = cone!(-0.5, 0.5, true);
+    right_obj2.set_transform(Matrix::translation(2.1, 0.5, 1.));
+    right_obj2.set_material(
+        MaterialBuilder::default()
+            .reflective(0.2)
+            .transparency(0.2)
+            .refractive_index(1.5)
+            .pattern(solid!(random_color()))
             .build()
             .unwrap(),
     );
@@ -114,7 +135,7 @@ fn main() -> std::io::Result<()> {
     let world = World::new(
         light_source,
         vec![
-            floor, left_wall, right_wall, back_wall, left_obj, center_obj, right_obj,
+            floor, left_wall, right_wall, back_wall, left_obj, center_obj, right_obj, right_obj2,
         ],
     );
     let hsize = 800;

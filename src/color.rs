@@ -1,5 +1,7 @@
 use crate::approx_eq;
 use core::ops::{Add, Div, Mul, Sub};
+use pad::PadStr;
+use std::str::FromStr;
 
 #[macro_export]
 macro_rules! color {
@@ -64,6 +66,23 @@ impl Color {
 impl PartialEq for Color {
     fn eq(&self, other: &Self) -> bool {
         approx_eq(self.r, other.r) && approx_eq(self.g, other.g) && approx_eq(self.b, other.b)
+    }
+}
+
+impl FromStr for Color {
+    type Err = std::num::ParseIntError;
+
+    fn from_str(hex_code: &str) -> Result<Self, Self::Err> {
+        assert_eq!("#", &hex_code[0..1]);
+        let hex_padded = hex_code.pad_to_width_with_char(7, '0');
+        let r: u8 = u8::from_str_radix(&hex_padded[1..3], 16)?;
+        let g: u8 = u8::from_str_radix(&hex_padded[3..5], 16)?;
+        let b: u8 = u8::from_str_radix(&hex_padded[5..7], 16)?;
+        Ok(Color::new(
+            r as f64 / 255.,
+            g as f64 / 255.,
+            b as f64 / 255.,
+        ))
     }
 }
 
