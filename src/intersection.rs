@@ -26,10 +26,9 @@ impl Intersection<'_> {
         Intersection { t, object }
     }
 
-    // pub fn hit(xs: Vec<Intersection>) -> Option<Intersection> {
-    pub fn hit<'a>(xs: &[&'a Intersection<'a>]) -> Option<&'a Intersection<'a>> {
+    pub fn hit(xs: Vec<Intersection>) -> Option<Intersection> {
         let mut min = f64::MAX;
-        let mut response: Option<&'a Intersection<'a>> = None;
+        let mut response = None;
         for i in xs {
             if i.t >= 0. && i.t < min {
                 min = i.t;
@@ -37,6 +36,10 @@ impl Intersection<'_> {
             }
         }
         response
+    }
+
+    pub fn sort(xs: &mut Vec<Intersection>) {
+        xs.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
     }
 
     pub fn prepare_computations(&self, r: &Ray, xs: &[&Intersection]) -> PreparedComputations {
@@ -57,7 +60,8 @@ impl Intersection<'_> {
         let mut n2 = 1.;
         let mut containers: Vec<&Shape> = vec![];
         for i in xs {
-            if self == *i {
+            let same = self == *i;
+            if same {
                 if containers.is_empty() {
                     n1 = 1.;
                 } else {
@@ -72,7 +76,7 @@ impl Intersection<'_> {
                     containers.push(i.object);
                 }
             }
-            if self == *i {
+            if same {
                 if containers.is_empty() {
                     n2 = 1.;
                 } else {
@@ -139,8 +143,8 @@ mod tests {
         let i1 = Intersection::new(1., &s);
         let i2 = Intersection::new(2., &s);
 
-        let i = Intersection::hit(&[&i2, &i1]);
-        assert_eq!(Some(&i1), i);
+        let i = Intersection::hit(vec![i2, i1]);
+        assert_eq!(Some(i1), i);
     }
 
     #[test]
@@ -149,8 +153,8 @@ mod tests {
         let i1 = Intersection::new(-1., &s);
         let i2 = Intersection::new(2., &s);
 
-        let i = Intersection::hit(&[&i2, &i1]);
-        assert_eq!(Some(&i2), i);
+        let i = Intersection::hit(vec![i2, i1]);
+        assert_eq!(Some(i2), i);
     }
 
     #[test]
@@ -159,7 +163,7 @@ mod tests {
         let i1 = Intersection::new(-2., &s);
         let i2 = Intersection::new(-1., &s);
 
-        let i = Intersection::hit(&[&i2, &i1]);
+        let i = Intersection::hit(vec![i2, i1]);
         assert_eq!(None, i);
     }
     #[test]
@@ -170,8 +174,8 @@ mod tests {
         let i3 = Intersection::new(-3., &s);
         let i4 = Intersection::new(2., &s);
 
-        let i = Intersection::hit(&[&i1, &i2, &i3, &i4]);
-        assert_eq!(Some(&i4), i);
+        let i = Intersection::hit(vec![i1, i2, i3, i4]);
+        assert_eq!(Some(i4), i);
     }
 
     #[test]

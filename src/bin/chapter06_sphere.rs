@@ -50,14 +50,8 @@ fn main() -> std::io::Result<()> {
 
             let r = ray!(ray_origin, (position - ray_origin).normalize());
 
-            let xs = shape
-                .intersect(&r)
-                .iter()
-                .map(|t| Intersection::new(*t, &shape))
-                .collect::<Vec<Intersection>>();
-            let xs_refs = xs.iter().collect::<Vec<&Intersection>>();
-
-            if let Some(hit) = Intersection::hit(&xs_refs[..]) {
+            let xs = shape.intersect(&r);
+            if let Some(hit) = Intersection::hit(xs) {
                 let point = r.position(hit.t);
                 let normal = hit.object.normal_at(point);
                 let eye = -r.direction;

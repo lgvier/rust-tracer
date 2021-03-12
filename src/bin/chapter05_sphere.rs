@@ -36,14 +36,8 @@ fn main() -> std::io::Result<()> {
 
             let r = ray!(ray_origin, (position - ray_origin).normalize());
 
-            let xs = shape
-                .intersect(&r)
-                .iter()
-                .map(|t| Intersection::new(*t, &shape))
-                .collect::<Vec<Intersection>>();
-            let xs_refs = xs.iter().collect::<Vec<&Intersection>>();
-
-            if Intersection::hit(&xs_refs[..]).is_some() {
+            let xs = shape.intersect(&r);
+            if Intersection::hit(xs).is_some() {
                 c.write_pixel(x, y, RED);
             }
         }

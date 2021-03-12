@@ -54,8 +54,8 @@ mod tests {
         let s = sphere!();
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
-        assert_eq!(4., xs[0]);
-        assert_eq!(6., xs[1]);
+        assert_eq!(4., xs[0].t);
+        assert_eq!(6., xs[1].t);
     }
 
     #[test]
@@ -64,8 +64,8 @@ mod tests {
         let s = sphere!();
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
-        assert_eq!(5., xs[0]);
-        assert_eq!(5., xs[1]);
+        assert_eq!(5., xs[0].t);
+        assert_eq!(5., xs[1].t);
     }
 
     #[test]
@@ -82,8 +82,8 @@ mod tests {
         let s = sphere!();
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
-        assert_eq!(-1., xs[0]);
-        assert_eq!(1., xs[1]);
+        assert_eq!(-1., xs[0].t);
+        assert_eq!(1., xs[1].t);
     }
 
     #[test]
@@ -92,8 +92,8 @@ mod tests {
         let s = sphere!();
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
-        assert_eq!(-6., xs[0]);
-        assert_eq!(-4., xs[1]);
+        assert_eq!(-6., xs[0].t);
+        assert_eq!(-4., xs[1].t);
     }
 
     #[test]
@@ -111,8 +111,8 @@ mod tests {
         s.set_transform(Matrix::scaling(2., 2., 2.));
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
-        assert_eq!(3., xs[0]);
-        assert_eq!(7., xs[1]);
+        assert_eq!(3., xs[0].t);
+        assert_eq!(7., xs[1].t);
     }
 
     #[test]

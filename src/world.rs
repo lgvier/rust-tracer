@@ -43,11 +43,9 @@ impl World {
     fn intersect(&self, r: &Ray) -> Vec<Intersection> {
         let mut result = vec![];
         for object in &self.objects {
-            for t in object.intersect(r) {
-                result.push(Intersection::new(t, object));
-            }
+            result.extend(object.intersect(r));
         }
-        result.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+        Intersection::sort(&mut result);
         result
     }
 
