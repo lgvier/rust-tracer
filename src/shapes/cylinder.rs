@@ -1,20 +1,30 @@
-use std::mem;
-
 use crate::{
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
     ray::Ray,
+    shapes::group::Group,
     tuple::Tuple,
     vector, EPSILON,
 };
+use std::{
+    mem, ptr,
+    sync::{Arc, RwLock},
+};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Cylinder {
     pub minimum: f64,
     pub maximum: f64,
     pub closed: bool,
     pub transform: Matrix,
     pub material: Material,
+    pub parent: Option<Arc<RwLock<Group>>>,
+}
+
+impl PartialEq for Cylinder {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
 }
 
 impl Cylinder {
@@ -25,6 +35,7 @@ impl Cylinder {
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent: None,
         }
     }
 
@@ -35,6 +46,7 @@ impl Cylinder {
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent: None,
         }
     }
 
@@ -45,6 +57,7 @@ impl Cylinder {
             closed,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent: None,
         }
     }
 

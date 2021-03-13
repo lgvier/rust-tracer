@@ -15,6 +15,10 @@ use crate::{
     },
     tuple::Tuple,
 };
+use std::{
+    ptr,
+    sync::{Arc, RwLock},
+};
 
 #[macro_export]
 macro_rules! sphere {
@@ -73,33 +77,39 @@ macro_rules! cone {
     };
 }
 
-#[macro_export]
-macro_rules! group {
-    // group!()
-    () => (
-        $crate::shapes::Shape::Group($crate::shapes::group::Group::empty())
-    );
-    // group!(shape1, shape2)
-    ($($x:expr),+ $(,)?) => (
-        $crate::shapes::Shape::Group($crate::shapes::group::Group::new(
-            // copied from Rust's vec! macro
-            <[_]>::into_vec(Box::new([$($x),+]))))
-    );
-}
+// #[macro_export]
+// macro_rules! group {
+//     // group!()
+//     () => (
+//         $crate::shapes::Shape::Group($crate::shapes::group::Group::empty())
+//     );
+//     // group!(shape1, shape2)
+//     ($($x:expr),+ $(,)?) => (
+//         $crate::shapes::Shape::Group($crate::shapes::group::Group::new(
+//             // copied from Rust's vec! macro
+//             <[_]>::into_vec(Box::new([$($x),+]))))
+//     );
+// }
 
 /*
 enum vs boxed trait polymorphism:
 https://stackoverflow.com/questions/52240099/should-i-use-enums-or-boxed-trait-objects-to-emulate-polymorphism
 */
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Shape {
     Sphere(Sphere),
     Plane(Plane),
     Cube(Cube),
     Cylinder(Cylinder),
     Cone(Cone),
-    Group(Group),
+    Group(Arc<RwLock<Group>>),
+}
+
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
 }
 
 impl Shape {
@@ -111,7 +121,7 @@ impl Shape {
             Shape::Cube(c) => self.as_intersections(c.local_intersect(&local_ray)),
             Shape::Cylinder(c) => self.as_intersections(c.local_intersect(&local_ray)),
             Shape::Cone(c) => self.as_intersections(c.local_intersect(&local_ray)),
-            Shape::Group(g) => g.local_intersect(&local_ray),
+            Shape::Group(g) => g.read().unwrap().local_intersect(&local_ray),
         }
     }
 
@@ -126,7 +136,7 @@ impl Shape {
             Shape::Cube(c) => &c.transform,
             Shape::Cylinder(c) => &c.transform,
             Shape::Cone(c) => &c.transform,
-            Shape::Group(g) => &g.transform,
+            Shape::Group(g) => &g.read().unwrap().transform,
         }
     }
 
@@ -137,7 +147,7 @@ impl Shape {
             Shape::Cube(c) => c.transform = transform,
             Shape::Cylinder(c) => c.transform = transform,
             Shape::Cone(c) => c.transform = transform,
-            Shape::Group(g) => g.transform = transform,
+            Shape::Group(g) => g.write().unwrap().transform = transform,
         }
     }
 
@@ -150,7 +160,7 @@ impl Shape {
             Shape::Cube(c) => c.local_normal_at(local_point),
             Shape::Cylinder(c) => c.local_normal_at(local_point),
             Shape::Cone(c) => c.local_normal_at(local_point),
-            Shape::Group(c) => c.local_normal_at(local_point),
+            Shape::Group(g) => g.read().unwrap().local_normal_at(local_point),
         };
         let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
         world_normal.normalize()
@@ -174,16 +184,52 @@ impl Shape {
             Shape::Cube(c) => c.material = material,
             Shape::Cylinder(c) => c.material = material,
             Shape::Cone(c) => c.material = material,
-            Shape::Group(g) => g.set_material(material),
+            Shape::Group(g) => g.write().unwrap().set_material(material),
         }
+    }
+
+    // // TODO pub needed?
+    // pub fn get_parent(&self) -> Option<Arc<RwLock<Group>>> {
+    //     match self {
+    //         Shape::Sphere(s) => s.parent,
+    //         Shape::Plane(p) => p.parent,
+    //         Shape::Cube(c) => c.parent,
+    //         Shape::Cylinder(c) => c.parent,
+    //         Shape::Cone(c) => c.parent,
+    //         Shape::Group(g) => g.read().unwrap().parent,
+    //     }
+    // }
+
+    pub fn set_parent(&mut self, parent: Option<Arc<RwLock<Group>>>) {
+        match self {
+            Shape::Sphere(s) => s.parent = parent,
+            Shape::Plane(p) => p.parent = parent,
+            Shape::Cube(c) => c.parent = parent,
+            Shape::Cylinder(c) => c.parent = parent,
+            Shape::Cone(c) => c.parent = parent,
+            Shape::Group(g) => g.write().unwrap().parent = parent,
+        }
+    }
+
+    // TODO pub needed?
+    pub fn world_to_object(&self, point: Tuple) -> Tuple {
+        let mut p = point;
+        // if let Some(parent) = self.get_parent() {
+        //     p = parent.world_to_object(point);
+        // }
+        // if !parents.is_empty() {
+        //     parents[0].world_to_object(&parents[1..], point);
+        // }
+        self.transform().inverse().unwrap() * p
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, sphere};
+    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, point, sphere};
     use rand::Rng;
+    use std::{f64::consts::PI, sync::RwLock};
 
     fn test_shape() -> Shape {
         let mut rng = rand::thread_rng();
@@ -217,5 +263,59 @@ mod tests {
         let mut s = test_shape();
         s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
         assert_eq!(1., s.material().ambient);
+    }
+
+    #[test]
+    fn converting_point_from_world_to_object_space() {
+        // let mut s = sphere!();
+        // let raw_sphere_ptr: *const Shape = &s; // needed to call the world_to_object method below
+
+        // s.set_transform(Matrix::translation(5., 0., 0.));
+
+        // let mut g2 = group!(s);
+        // g2.set_transform(Matrix::scaling(2., 2., 2.));
+
+        // let mut g1 = group!(g2);
+        // g1.set_transform(Matrix::rotation_y(PI / 2.));
+        // let _p = unsafe { (*raw_sphere_ptr).world_to_object(point!(-2., 0., -10.)) };
+        // assert_eq!(point!(0., 0., -1.), p);
+    }
+
+    enum Shp {
+        Group(Arc<RwLock<Group>>),
+        Node(Node),
+    }
+
+    struct Group {
+        pub parent: Option<Arc<RwLock<Group>>>,
+        pub children: Vec<Shp>,
+    }
+
+    struct Node {
+        pub parent: Option<Arc<RwLock<Group>>>,
+    }
+
+    #[test]
+    fn self_reference() {
+        let root_rc = Arc::new(RwLock::new(Group {
+            parent: None,
+            children: Vec::new(),
+        }));
+
+        let child_group = Arc::new(RwLock::new(Group {
+            parent: Some(root_rc.clone()),
+            children: Vec::new(),
+        }));
+
+        root_rc
+            .write()
+            .unwrap()
+            .children
+            .push(Shp::Group(child_group.clone()));
+
+        let node = Node {
+            parent: Some(child_group.clone()),
+        };
+        child_group.write().unwrap().children.push(Shp::Node(node));
     }
 }

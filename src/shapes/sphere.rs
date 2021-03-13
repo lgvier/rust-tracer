@@ -3,13 +3,25 @@ use crate::{
     matrix::{Matrix, IDENTITY_MATRIX},
     point,
     ray::Ray,
+    shapes::group::Group,
     tuple::Tuple,
 };
+use std::{
+    ptr,
+    sync::{Arc, RwLock},
+};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Sphere {
     pub transform: Matrix,
     pub material: Material,
+    pub parent: Option<Arc<RwLock<Group>>>,
+}
+
+impl PartialEq for Sphere {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
 }
 
 impl Sphere {
@@ -17,6 +29,7 @@ impl Sphere {
         Sphere {
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent: None,
         }
     }
 

@@ -2,14 +2,26 @@ use crate::{
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
     ray::Ray,
+    shapes::group::Group,
     tuple::Tuple,
     vector, EPSILON,
 };
+use std::{
+    ptr,
+    sync::{Arc, RwLock},
+};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Plane {
     pub transform: Matrix,
     pub material: Material,
+    pub parent: Option<Arc<RwLock<Group>>>,
+}
+
+impl PartialEq for Plane {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
 }
 
 impl Plane {
@@ -17,6 +29,7 @@ impl Plane {
         Plane {
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent: None,
         }
     }
 
