@@ -65,14 +65,14 @@ impl Material {
     ) -> Color {
         let color = self.pattern.color_at_object(object, point);
         let effective_color = color * light.intensity;
-        let lightv = (light.position - point).normalize();
-        let light_dot_normal = lightv.dot(&normalv);
 
         let ambient = effective_color * self.ambient;
-
         if in_shadow {
             return ambient;
         }
+
+        let lightv = (light.position - point).normalize();
+        let light_dot_normal = lightv.dot(&normalv);
 
         let diffuse;
         let specular;
