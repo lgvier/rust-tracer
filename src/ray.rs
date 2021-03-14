@@ -1,5 +1,6 @@
-use crate::{matrix::Matrix, tuple::Tuple};
 use std::ops::Mul;
+
+use crate::{matrix::Matrix, tuple::Tuple};
 
 #[macro_export]
 macro_rules! ray {

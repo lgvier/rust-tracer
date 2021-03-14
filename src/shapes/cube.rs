@@ -10,6 +10,7 @@ use crate::{
 pub struct Cube {
     pub transform: Matrix,
     pub material: Material,
+    pub parent_id: Option<usize>,
 }
 
 impl Cube {
@@ -17,6 +18,7 @@ impl Cube {
         Cube {
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 

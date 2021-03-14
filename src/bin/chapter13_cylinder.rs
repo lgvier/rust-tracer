@@ -1,5 +1,8 @@
 use rand::Rng;
+use std::{f64::consts::PI, str::FromStr};
+
 use rust_tracer::{
+    arena::Arena,
     camera::Camera,
     checkers_pattern,
     color::{Color, BLACK, WHITE},
@@ -10,7 +13,6 @@ use rust_tracer::{
     plane, point, ring_pattern, solid, vector,
     world::World,
 };
-use std::{f64::consts::PI, str::FromStr};
 
 const COLOR_PALETTE: &[&str] = &["#E27D60", "#85DCB", "#E8A87C", "#C38D9E", "#41B3A3"];
 
@@ -127,12 +129,20 @@ fn main() -> std::io::Result<()> {
 
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
-    let world = World::new(
-        light_source,
-        vec![
-            floor, left_wall, right_wall, back_wall, left_obj, center_obj, right_obj, right_obj2,
-        ],
-    );
+    let mut arena = Arena::new();
+    let object_ids = vec![
+        arena.add(floor),
+        arena.add(left_wall),
+        arena.add(right_wall),
+        arena.add(back_wall),
+        arena.add(left_obj),
+        arena.add(center_obj),
+        arena.add(right_obj),
+        arena.add(right_obj2),
+    ];
+
+    let world = World::new(light_source, arena, object_ids);
+
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(

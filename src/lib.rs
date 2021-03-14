@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate derive_builder;
 
+pub mod arena;
 pub mod camera;
 pub mod canvas;
 pub mod color;

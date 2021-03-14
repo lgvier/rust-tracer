@@ -1,6 +1,7 @@
-use crate::{approx_eq, matrix::Matrix};
 use core::ops::{Add, Div, Mul, Neg, Sub};
 use std::fmt;
+
+use crate::{approx_eq, matrix::Matrix};
 
 #[macro_export]
 macro_rules! point {

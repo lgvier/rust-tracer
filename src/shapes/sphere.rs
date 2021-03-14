@@ -10,6 +10,7 @@ use crate::{
 pub struct Sphere {
     pub transform: Matrix,
     pub material: Material,
+    pub parent_id: Option<usize>,
 }
 
 impl Sphere {
@@ -17,6 +18,7 @@ impl Sphere {
         Sphere {
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 
@@ -45,14 +47,17 @@ impl Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{material::MaterialBuilder, ray, sphere, vector};
+
     use std::f64::consts::PI;
+
+    use crate::{arena::Arena, material::MaterialBuilder, ray, sphere, vector};
 
     #[test]
     fn sphere_ray_intersects_at_two_pts() {
+        let arena = Arena::new();
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(4., xs[0].t);
         assert_eq!(6., xs[1].t);
@@ -60,9 +65,10 @@ mod tests {
 
     #[test]
     fn sphere_ray_intersects_tangent() {
+        let arena = Arena::new();
         let r = ray!(0., 1., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(5., xs[0].t);
         assert_eq!(5., xs[1].t);
@@ -70,17 +76,19 @@ mod tests {
 
     #[test]
     fn sphere_ray_misses() {
+        let arena = Arena::new();
         let r = ray!(0., 2., -5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert!(xs.is_empty());
     }
 
     #[test]
     fn sphere_ray_within() {
+        let arena = Arena::new();
         let r = ray!(0., 0., 0.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(-1., xs[0].t);
         assert_eq!(1., xs[1].t);
@@ -88,9 +96,10 @@ mod tests {
 
     #[test]
     fn sphere_ray_behind() {
+        let arena = Arena::new();
         let r = ray!(0., 0., 5.; 0., 0., 1.);
         let s = sphere!();
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(-6., xs[0].t);
         assert_eq!(-4., xs[1].t);
@@ -106,10 +115,11 @@ mod tests {
 
     #[test]
     fn sphere_set_transform_scaled_intersect() {
+        let arena = Arena::new();
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::scaling(2., 2., 2.));
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(3., xs[0].t);
         assert_eq!(7., xs[1].t);
@@ -117,10 +127,11 @@ mod tests {
 
     #[test]
     fn sphere_set_transform_translated_intersect() {
+        let arena = Arena::new();
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::translation(5., 0., 0.));
-        let xs = s.intersect(&r);
+        let xs = s.intersect(&arena, &r);
         assert!(xs.is_empty());
     }
 

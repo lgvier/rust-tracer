@@ -1,7 +1,9 @@
-use rust_tracer::canvas::Canvas;
-use rust_tracer::color::RED;
-use rust_tracer::tuple::Tuple;
-use rust_tracer::{point, vector};
+use rust_tracer::{
+    canvas::Canvas,
+    color::RED,
+    tuple::Tuple,
+    {point, vector},
+};
 
 #[derive(Debug)]
 struct Projectile {

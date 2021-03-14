@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use rust_tracer::{
-    canvas::Canvas, color::WHITE, intersection::Intersection, light::PointLight,
+    arena::Arena, canvas::Canvas, color::WHITE, intersection::Intersection, light::PointLight,
     material::MaterialBuilder, matrix::Matrix, point, ray, solid, sphere,
 };
 
@@ -15,6 +15,7 @@ fn main() -> std::io::Result<()> {
 
     let mut c = Canvas::new(canvas_pixels, canvas_pixels);
 
+    let arena = Arena::new();
     let mut shape = sphere!();
     //sphere.set_transform(Matrix::scaling(1., 0.5, 1.));
     //sphere.set_transform(Matrix::scaling(0.5, 1., 1.));
@@ -40,7 +41,7 @@ fn main() -> std::io::Result<()> {
 
             let r = ray!(ray_origin, (position - ray_origin).normalize());
 
-            let xs = shape.intersect(&r);
+            let xs = shape.intersect(&arena, &r);
             if let Some(hit) = Intersection::hit(xs) {
                 let point = r.position(hit.t);
                 let normal = hit.object.normal_at(point);

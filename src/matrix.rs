@@ -1,6 +1,7 @@
-use crate::{approx_eq, ray::Ray, tuple::Tuple};
 use core::ops::{Index, IndexMut, Mul};
 use std::fmt;
+
+use crate::{approx_eq, ray::Ray, tuple::Tuple};
 
 #[macro_export]
 macro_rules! matrix {

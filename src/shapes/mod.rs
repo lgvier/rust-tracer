@@ -6,6 +6,7 @@ pub mod plane;
 pub mod sphere;
 
 use crate::{
+    arena::Arena,
     intersection::Intersection,
     material::Material,
     matrix::Matrix,
@@ -73,19 +74,19 @@ macro_rules! cone {
     };
 }
 
-#[macro_export]
-macro_rules! group {
-    // group!()
-    () => (
-        $crate::shapes::Shape::Group($crate::shapes::group::Group::empty())
-    );
-    // group!(shape1, shape2)
-    ($($x:expr),+ $(,)?) => (
-        $crate::shapes::Shape::Group($crate::shapes::group::Group::new(
-            // copied from Rust's vec! macro
-            <[_]>::into_vec(Box::new([$($x),+]))))
-    );
-}
+// #[macro_export]
+// macro_rules! group {
+//     // group!()
+//     () => (
+//         $crate::shapes::Shape::Group($crate::shapes::group::Group::empty())
+//     );
+//     // group!(shape1, shape2)
+//     ($($x:expr),+ $(,)?) => (
+//         $crate::shapes::Shape::Group($crate::shapes::group::Group::new(
+//             // copied from Rust's vec! macro
+//             <[_]>::into_vec(Box::new([$($x),+]))))
+//     );
+// }
 
 /*
 enum vs boxed trait polymorphism:
@@ -103,7 +104,7 @@ pub enum Shape {
 }
 
 impl Shape {
-    pub fn intersect<'a>(&'a self, r: &Ray) -> Vec<Intersection> {
+    pub fn intersect<'a>(&'a self, arena: &'a Arena, r: &Ray) -> Vec<Intersection> {
         let local_ray = r * self.transform().inverse().unwrap();
         match self {
             Shape::Sphere(s) => self.as_intersections(s.local_intersect(&local_ray)),
@@ -111,7 +112,7 @@ impl Shape {
             Shape::Cube(c) => self.as_intersections(c.local_intersect(&local_ray)),
             Shape::Cylinder(c) => self.as_intersections(c.local_intersect(&local_ray)),
             Shape::Cone(c) => self.as_intersections(c.local_intersect(&local_ray)),
-            Shape::Group(g) => g.local_intersect(&local_ray),
+            Shape::Group(g) => g.local_intersect(arena, &local_ray),
         }
     }
 
@@ -174,16 +175,49 @@ impl Shape {
             Shape::Cube(c) => c.material = material,
             Shape::Cylinder(c) => c.material = material,
             Shape::Cone(c) => c.material = material,
-            Shape::Group(g) => g.set_material(material),
+            Shape::Group(_) => panic!("A Group doesnt have a material"),
         }
+    }
+
+    pub fn set_parent_id(&mut self, parent_id: Option<usize>) {
+        match self {
+            Shape::Sphere(s) => s.parent_id = parent_id,
+            Shape::Plane(p) => p.parent_id = parent_id,
+            Shape::Cube(c) => c.parent_id = parent_id,
+            Shape::Cylinder(c) => c.parent_id = parent_id,
+            Shape::Cone(c) => c.parent_id = parent_id,
+            Shape::Group(g) => g.parent_id = parent_id,
+        }
+    }
+
+    pub fn get_parent<'a>(&'a self, arena: &'a Arena) -> Option<&Shape> {
+        let parent_id = match self {
+            Shape::Sphere(s) => s.parent_id,
+            Shape::Plane(p) => p.parent_id,
+            Shape::Cube(c) => c.parent_id,
+            Shape::Cylinder(c) => c.parent_id,
+            Shape::Cone(c) => c.parent_id,
+            Shape::Group(g) => g.parent_id,
+        };
+        parent_id.map(|id| arena.get(id))
+    }
+
+    pub fn world_to_object<'a>(&'a self, arena: &'a Arena, point: Tuple) -> Tuple {
+        let mut p = point;
+        if let Some(parent) = self.get_parent(arena) {
+            p = parent.world_to_object(arena, point);
+        }
+        self.transform().inverse().unwrap() * p
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, sphere};
     use rand::Rng;
+    use std::f64::consts::PI;
+
+    use super::*;
+    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, point, sphere};
 
     fn test_shape() -> Shape {
         let mut rng = rand::thread_rng();
@@ -217,5 +251,33 @@ mod tests {
         let mut s = test_shape();
         s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
         assert_eq!(1., s.material().ambient);
+    }
+
+    #[test]
+    fn converting_point_from_world_to_object_space() {
+        let mut arena = Arena::new();
+
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(5., 0., 0.));
+        let s_id = arena.add(s);
+
+        let g2_id = arena.next_id();
+        let mut g2_inner = Group::new(g2_id);
+        g2_inner.add_child(&mut arena, s_id);
+        let mut g2 = Shape::Group(g2_inner);
+        g2.set_transform(Matrix::scaling(2., 2., 2.));
+        arena.add_with_id(g2_id, g2);
+
+        let g1_id = arena.next_id();
+        let mut g1_inner = Group::new(g1_id);
+        g1_inner.add_child(&mut arena, g2_id);
+        let mut g1 = Shape::Group(g1_inner);
+        g1.set_transform(Matrix::rotation_y(PI / 2.));
+        arena.add_with_id(g1_id, g1);
+
+        let p = arena
+            .get(s_id)
+            .world_to_object(&arena, point!(-2., 0., -10.));
+        assert_eq!(point!(0., 0., -1.), p);
     }
 }

@@ -1,7 +1,4 @@
-use crate::matrix;
-use crate::matrix::Matrix;
-use crate::ray::Ray;
-use crate::tuple::Tuple;
+use crate::{matrix, matrix::Matrix, ray::Ray, tuple::Tuple};
 
 // Fluent API
 impl Tuple {
@@ -117,9 +114,10 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{point, ray, vector};
-    use matrix::IDENTITY_MATRIX;
+
     use std::f64::consts::PI;
+
+    use crate::{matrix::IDENTITY_MATRIX, point, ray, vector};
 
     #[test]
     fn translation() {

@@ -15,6 +15,7 @@ pub struct Cone {
     pub closed: bool,
     pub transform: Matrix,
     pub material: Material,
+    pub parent_id: Option<usize>,
 }
 
 impl Cone {
@@ -25,6 +26,7 @@ impl Cone {
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 
@@ -35,6 +37,7 @@ impl Cone {
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 
@@ -45,6 +48,7 @@ impl Cone {
             closed,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 

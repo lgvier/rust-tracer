@@ -1,4 +1,7 @@
+use std::f64::consts::PI;
+
 use rust_tracer::{
+    arena::Arena,
     camera::Camera,
     checkers_pattern,
     color::{BLACK, BLUE, RED, WHITE, YELLOW},
@@ -8,7 +11,6 @@ use rust_tracer::{
     plane, point, ring_pattern, solid, sphere, stripe_pattern, vector,
     world::World,
 };
-use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
     let floor_pattern = checkers_pattern!(BLACK, WHITE);
@@ -65,7 +67,16 @@ fn main() -> std::io::Result<()> {
 
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
-    let world = World::new(light_source, vec![floor, middle, left, right]);
+    let mut arena = Arena::new();
+    let object_ids = vec![
+        arena.add(floor),
+        arena.add(middle),
+        arena.add(left),
+        arena.add(right),
+    ];
+
+    let world = World::new(light_source, arena, object_ids);
+
     let hsize = 800 * 2;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(

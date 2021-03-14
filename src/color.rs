@@ -1,7 +1,8 @@
-use crate::approx_eq;
 use core::ops::{Add, Div, Mul, Sub};
 use pad::PadStr;
 use std::str::FromStr;
+
+use crate::approx_eq;
 
 #[macro_export]
 macro_rules! color {

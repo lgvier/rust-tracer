@@ -1,8 +1,9 @@
-use rust_tracer::{
-    camera::Camera, color::WHITE, light::PointLight, material::MaterialBuilder, matrix::Matrix,
-    plane, point, solid, sphere, vector, world::World,
-};
 use std::f64::consts::PI;
+
+use rust_tracer::{
+    arena::Arena, camera::Camera, color::WHITE, light::PointLight, material::MaterialBuilder,
+    matrix::Matrix, plane, point, solid, sphere, vector, world::World,
+};
 
 fn main() -> std::io::Result<()> {
     let floor_material = MaterialBuilder::default()
@@ -50,7 +51,16 @@ fn main() -> std::io::Result<()> {
 
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
-    let world = World::new(light_source, vec![floor, middle, left, right]);
+    let mut arena = Arena::new();
+    let object_ids = vec![
+        arena.add(floor),
+        arena.add(middle),
+        arena.add(left),
+        arena.add(right),
+    ];
+
+    let world = World::new(light_source, arena, object_ids);
+
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(

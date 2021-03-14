@@ -1,3 +1,9 @@
+use std::time::Instant;
+
+use indicatif::HumanDuration;
+use indicatif::ProgressBar;
+use rayon::prelude::*;
+
 use crate::{
     canvas::Canvas,
     color::Color,
@@ -6,11 +12,6 @@ use crate::{
     ray::Ray,
     world::World,
 };
-use std::time::Instant;
-
-use indicatif::HumanDuration;
-use indicatif::ProgressBar;
-use rayon::prelude::*;
 
 pub struct Camera {
     pub hsize: usize,
@@ -124,8 +125,10 @@ impl Camera {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{approx_eq, color, vector};
+
     use std::f64::consts::PI;
+
+    use crate::{approx_eq, color, vector};
 
     #[test]
     fn ctor() {

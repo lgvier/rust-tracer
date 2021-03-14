@@ -10,6 +10,7 @@ use crate::{
 pub struct Plane {
     pub transform: Matrix,
     pub material: Material,
+    pub parent_id: Option<usize>,
 }
 
 impl Plane {
@@ -17,6 +18,7 @@ impl Plane {
         Plane {
             transform: IDENTITY_MATRIX,
             material: Material::default(),
+            parent_id: None,
         }
     }
 
