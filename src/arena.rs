@@ -13,14 +13,15 @@ impl Arena {
             objects: Vec::new(),
         }
     }
-    pub fn next_id(&mut self) -> usize {
-        let id = self.objects.len();
-        self.objects.push(None);
-        id
-    }
     pub fn add(&mut self, object: Shape) -> usize {
         let id = self.objects.len();
         self.objects.push(Some(object));
+        id
+    }
+    // When creating groups, we need the id before adding the object to the arena
+    pub fn next_id(&mut self) -> usize {
+        let id = self.objects.len();
+        self.objects.push(None);
         id
     }
     pub fn add_with_id(&mut self, id: usize, object: Shape) {

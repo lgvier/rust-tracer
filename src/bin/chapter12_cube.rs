@@ -1,7 +1,6 @@
 use std::f64::consts::PI;
 
 use rust_tracer::{
-    arena::Arena,
     camera::Camera,
     checkers_pattern,
     color::{BLACK, BLUE, GREEN, RED, WHITE, YELLOW},
@@ -84,7 +83,6 @@ fn main() -> std::io::Result<()> {
 
     let world = World::new(
         light_source,
-        Arena::new(),
         vec![floor, left_wall, right_wall, left_obj, right_obj],
     );
 

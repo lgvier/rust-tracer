@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
 
 use rust_tracer::{
-    arena::Arena, camera::Camera, color::WHITE, light::PointLight, material::MaterialBuilder,
-    matrix::Matrix, point, solid, sphere, vector, world::World,
+    camera::Camera, color::WHITE, light::PointLight, material::MaterialBuilder, matrix::Matrix,
+    point, solid, sphere, vector, world::World,
 };
 
 fn main() -> std::io::Result<()> {
@@ -71,7 +71,6 @@ fn main() -> std::io::Result<()> {
 
     let world = World::new(
         light_source,
-        Arena::new(),
         vec![floor, left_wall, right_wall, middle, left, right],
     );
 

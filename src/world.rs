@@ -20,10 +20,10 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(light: PointLight, arena: Arena, objects: Vec<Shape>) -> Self {
+    pub fn new(light: PointLight, objects: Vec<Shape>) -> Self {
         let mut w = Self {
             light,
-            arena,
+            arena: Arena::new(),
             object_ids: Vec::new(),
         };
         for object in objects {
@@ -170,7 +170,7 @@ impl Default for World {
         let mut s2 = sphere!();
         s2.set_transform(Matrix::scaling(0.5, 0.5, 0.5));
 
-        World::new(light, Arena::new(), vec![s1, s2])
+        World::new(light, vec![s1, s2])
     }
 }
 
@@ -270,12 +270,11 @@ mod tests {
     #[test]
     fn shade_hit_intersection_in_shadow() {
         let light = PointLight::new(point!(0., 0., -10.), WHITE);
-        let mut arena = Arena::new();
 
         let s1 = sphere!();
         let mut s2 = sphere!();
         s2.set_transform(Matrix::translation(0., 0., 10.));
-        let w = World::new(light, arena, vec![s1, s2]);
+        let w = World::new(light, vec![s1, s2]);
 
         let r = ray!(point!(0., 0., 5.), vector!(0., 0., 1.));
         let i = Intersection::new(4., &w.object_by_index(1));
@@ -350,7 +349,7 @@ mod tests {
         let mut upper = plane!();
         upper.set_material(MaterialBuilder::default().reflective(1.).build().unwrap());
         upper.set_transform(Matrix::translation(0., 1., 0.));
-        let w = World::new(light, Arena::new(), vec![lower, upper]);
+        let w = World::new(light, vec![lower, upper]);
         let r = ray!(point!(0., 0., 0.), vector!(0., 1., 0.));
         w.color_at(&r); // should terminate succesfully
     }
