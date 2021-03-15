@@ -82,16 +82,11 @@ fn main() -> std::io::Result<()> {
 
     let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
 
-    let mut arena = Arena::new();
-    let object_ids = vec![
-        arena.add(floor),
-        arena.add(left_wall),
-        arena.add(right_wall),
-        arena.add(left_obj),
-        arena.add(right_obj),
-    ];
-
-    let world = World::new(light_source, arena, object_ids);
+    let world = World::new(
+        light_source,
+        Arena::new(),
+        vec![floor, left_wall, right_wall, left_obj, right_obj],
+    );
 
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);

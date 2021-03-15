@@ -3,8 +3,6 @@ use crate::{
     intersection::Intersection,
     matrix::{Matrix, IDENTITY_MATRIX},
     ray::Ray,
-    tuple::Tuple,
-    vector,
 };
 
 #[derive(Debug, PartialEq)]
@@ -43,10 +41,6 @@ impl Group {
         }
         Intersection::sort(&mut result);
         result
-    }
-
-    pub fn local_normal_at(&self, _local_point: Tuple) -> Tuple {
-        vector!(0., 0., 0.)
     }
 }
 

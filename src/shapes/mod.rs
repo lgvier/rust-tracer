@@ -142,19 +142,35 @@ impl Shape {
         }
     }
 
-    pub fn normal_at(&self, p: Tuple) -> Tuple {
-        let transform_inverse = self.transform().inverse().unwrap();
-        let local_point = transform_inverse * p;
+    pub fn normal_at<'a>(&'a self, arena: &'a Arena, p: Tuple) -> Tuple {
+        let local_point = self.world_to_object(arena, p);
         let local_normal = match self {
             Shape::Sphere(s) => s.local_normal_at(local_point),
             Shape::Plane(p) => p.local_normal_at(local_point),
             Shape::Cube(c) => c.local_normal_at(local_point),
             Shape::Cylinder(c) => c.local_normal_at(local_point),
             Shape::Cone(c) => c.local_normal_at(local_point),
-            Shape::Group(c) => c.local_normal_at(local_point),
+            Shape::Group(_) => panic!("Called normal_at on a group"),
         };
-        let world_normal = (transform_inverse.transpose() * local_normal).to_vector();
-        world_normal.normalize()
+        self.normal_to_world(arena, local_normal)
+    }
+
+    fn world_to_object<'a>(&'a self, arena: &'a Arena, point: Tuple) -> Tuple {
+        let mut point = point;
+        if let Some(parent) = self.get_parent(arena) {
+            point = parent.world_to_object(arena, point);
+        }
+        self.transform().inverse().unwrap() * point
+    }
+
+    fn normal_to_world<'a>(&'a self, arena: &'a Arena, normal: Tuple) -> Tuple {
+        let mut normal = self.transform().inverse().unwrap().transpose() * normal;
+        normal.w = 0.;
+        normal = normal.normalize();
+        if let Some(parent) = self.get_parent(arena) {
+            normal = parent.normal_to_world(arena, normal);
+        }
+        normal
     }
 
     pub fn material(&self) -> &Material {
@@ -201,14 +217,6 @@ impl Shape {
         };
         parent_id.map(|id| arena.get(id))
     }
-
-    pub fn world_to_object<'a>(&'a self, arena: &'a Arena, point: Tuple) -> Tuple {
-        let mut p = point;
-        if let Some(parent) = self.get_parent(arena) {
-            p = parent.world_to_object(arena, point);
-        }
-        self.transform().inverse().unwrap() * p
-    }
 }
 
 #[cfg(test)]
@@ -217,7 +225,7 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::*;
-    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, point, sphere};
+    use crate::{material::MaterialBuilder, matrix::IDENTITY_MATRIX, point, sphere, vector};
 
     fn test_shape() -> Shape {
         let mut rng = rand::thread_rng();
@@ -279,5 +287,62 @@ mod tests {
             .get(s_id)
             .world_to_object(&arena, point!(-2., 0., -10.));
         assert_eq!(point!(0., 0., -1.), p);
+    }
+
+    #[test]
+    fn converting_normal_from_object_to_world_space() {
+        let mut arena = Arena::new();
+
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(5., 0., 0.));
+        let s_id = arena.add(s);
+
+        let g2_id = arena.next_id();
+        let mut g2_inner = Group::new(g2_id);
+        g2_inner.add_child(&mut arena, s_id);
+        let mut g2 = Shape::Group(g2_inner);
+        g2.set_transform(Matrix::scaling(1., 2., 3.));
+        arena.add_with_id(g2_id, g2);
+
+        let g1_id = arena.next_id();
+        let mut g1_inner = Group::new(g1_id);
+        g1_inner.add_child(&mut arena, g2_id);
+        let mut g1 = Shape::Group(g1_inner);
+        g1.set_transform(Matrix::rotation_y(PI / 2.));
+        arena.add_with_id(g1_id, g1);
+
+        let n = arena.get(s_id).normal_to_world(
+            &arena,
+            point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.),
+        );
+        assert_eq!(vector!(0.28571, 0.42857, -0.85714), n);
+    }
+
+    #[test]
+    fn finding_normal_on_child_object() {
+        let mut arena = Arena::new();
+
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(5., 0., 0.));
+        let s_id = arena.add(s);
+
+        let g2_id = arena.next_id();
+        let mut g2_inner = Group::new(g2_id);
+        g2_inner.add_child(&mut arena, s_id);
+        let mut g2 = Shape::Group(g2_inner);
+        g2.set_transform(Matrix::scaling(1., 2., 3.));
+        arena.add_with_id(g2_id, g2);
+
+        let g1_id = arena.next_id();
+        let mut g1_inner = Group::new(g1_id);
+        g1_inner.add_child(&mut arena, g2_id);
+        let mut g1 = Shape::Group(g1_inner);
+        g1.set_transform(Matrix::rotation_y(PI / 2.));
+        arena.add_with_id(g1_id, g1);
+
+        let n = arena
+            .get(s_id)
+            .normal_at(&arena, point!(1.7321, 1.1547, -5.5774));
+        assert_eq!(vector!(0.2857, 0.42854, -0.85716), n);
     }
 }

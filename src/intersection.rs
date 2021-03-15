@@ -1,4 +1,4 @@
-use crate::{ray::Ray, shapes::Shape, tuple::Tuple, EPSILON};
+use crate::{arena::Arena, ray::Ray, shapes::Shape, tuple::Tuple, EPSILON};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection<'a> {
@@ -42,10 +42,15 @@ impl Intersection<'_> {
         xs.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
     }
 
-    pub fn prepare_computations(&self, r: &Ray, xs: &[&Intersection]) -> PreparedComputations {
+    pub fn prepare_computations<'a>(
+        &'a self,
+        arena: &'a Arena,
+        r: &Ray,
+        xs: &[&Intersection],
+    ) -> PreparedComputations {
         let point = r.position(self.t);
         let eyev = -r.direction;
-        let temp_normalv = self.object.normal_at(point);
+        let temp_normalv = self.object.normal_at(arena, point);
         let (inside, normalv) = if temp_normalv.dot(&eyev) < 0. {
             (true, -temp_normalv)
         } else {
@@ -180,10 +185,11 @@ mod tests {
 
     #[test]
     fn precompute() {
+        let arena = Arena::new();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = sphere!();
         let i = Intersection::new(4., &s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
         assert_eq!(point!(0., 0., -1.), comps.point);
@@ -193,10 +199,11 @@ mod tests {
 
     #[test]
     fn outside() {
+        let arena = Arena::new();
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = sphere!();
         let i = Intersection::new(4., &s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
         assert!(!comps.inside);
@@ -204,10 +211,11 @@ mod tests {
 
     #[test]
     fn inside() {
+        let arena = Arena::new();
         let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
         let s = sphere!();
         let i = Intersection::new(1., &s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
         assert_eq!(point!(0., 0., 1.), comps.point);
@@ -218,17 +226,20 @@ mod tests {
 
     #[test]
     fn hit_should_offset_point() {
+        let arena = Arena::new();
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::translation(0., 0., 1.));
         let i = Intersection::new(5., &s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert!(comps.over_point.z < -EPSILON / 2.);
         assert!(comps.point.z > comps.over_point.z);
     }
 
     #[test]
     fn finding_n1_and_n2() {
+        let arena = Arena::new();
+
         let mut a = sphere!();
         a.set_transform(Matrix::scaling(2., 2., 2.));
         a.set_material(
@@ -277,7 +288,7 @@ mod tests {
         ];
 
         for (i, intersection) in xs.iter().enumerate() {
-            let comps = intersection.prepare_computations(&r, &xs_refs[..]);
+            let comps = intersection.prepare_computations(&arena, &r, &xs_refs[..]);
             let (expected_n1, expected_n2) = expected_n1_n2s[i];
             println!(
                 "i: {}, t: {}, expected_n1: {}, n1: {}, expected_n2: {}, n2: {}",
@@ -290,17 +301,19 @@ mod tests {
 
     #[test]
     fn under_point_is_below_surface() {
+        let arena = Arena::new();
         let r = ray!(0., 0., -5.; 0., 0., 1.);
         let mut s = sphere!();
         s.set_transform(Matrix::translation(0., 0., 1.));
         let i = Intersection::new(5., &s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert!(comps.under_point.z > -EPSILON / 2.);
         assert!(comps.point.z < comps.under_point.z);
     }
 
     #[test]
     fn schlick_approximation_under_total_internal_reflection() {
+        let arena = Arena::new();
         let mut shape = sphere!();
         shape.set_material(
             MaterialBuilder::default()
@@ -313,13 +326,14 @@ mod tests {
         let r = ray!(0., 0., 2f64.sqrt() / 2.; 0., 1., 0.);
         let i1 = Intersection::new(-2f64.sqrt() / 2., &shape);
         let i2 = Intersection::new(2f64.sqrt() / 2., &shape);
-        let comps = i2.prepare_computations(&r, &[&i1, &i2]);
+        let comps = i2.prepare_computations(&arena, &r, &[&i1, &i2]);
         let reflectance = comps.schlick();
         assert_eq!(1., reflectance);
     }
 
     #[test]
     fn schlick_approximation_with_perpendicular_viewing_angle() {
+        let arena = Arena::new();
         let mut shape = sphere!();
         shape.set_material(
             MaterialBuilder::default()
@@ -332,13 +346,14 @@ mod tests {
         let r = ray!(0., 0., 0.; 0., 1., 0.);
         let i1 = Intersection::new(-1., &shape);
         let i2 = Intersection::new(1., &shape);
-        let comps = i2.prepare_computations(&r, &[&i1, &i2]);
+        let comps = i2.prepare_computations(&arena, &r, &[&i1, &i2]);
         let reflectance = comps.schlick();
         assert!(approx_eq(0.04, reflectance));
     }
 
     #[test]
     fn schlick_approximation_with_small_angle_and_n2_gt_n1() {
+        let arena = Arena::new();
         let mut shape = sphere!();
         shape.set_material(
             MaterialBuilder::default()
@@ -350,7 +365,7 @@ mod tests {
         );
         let r = ray!(0., 0.99, -2.; 0., 0., 1.);
         let i = Intersection::new(1.8589, &shape);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         let reflectance = comps.schlick();
         assert!(approx_eq(0.48873, dbg!(reflectance)));
     }

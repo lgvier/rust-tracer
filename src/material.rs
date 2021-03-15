@@ -106,8 +106,8 @@ impl Default for Material {
 mod tests {
     use super::*;
     use crate::{
-        color, color::GREEN, intersection::Intersection, plane, point, ray, sphere, stripe_pattern,
-        vector,
+        arena::Arena, color, color::GREEN, intersection::Intersection, plane, point, ray, sphere,
+        stripe_pattern, vector,
     };
 
     #[test]
@@ -268,13 +268,14 @@ mod tests {
 
     #[test]
     fn precomputing_reflection_vector() {
+        let arena = Arena::new();
         let shape = plane!();
         let r = ray!(
             point!(0., 1., -1.),
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &shape);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(
             vector!(0., 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
             comps.reflectv

@@ -137,29 +137,36 @@ mod tests {
 
     #[test]
     fn sphere_normal_x_axis() {
+        let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(point!(1., 0., 0.));
+        let n = s.normal_at(&arena, point!(1., 0., 0.));
         assert_eq!(vector!(1., 0., 0.), n);
     }
 
     #[test]
     fn sphere_normal_y_axis() {
+        let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(point!(0., 1., 0.));
+        let n = s.normal_at(&arena, point!(0., 1., 0.));
         assert_eq!(vector!(0., 1., 0.), n);
     }
 
     #[test]
     fn sphere_normal_z_axis() {
+        let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(point!(0., 0., 1.));
+        let n = s.normal_at(&arena, point!(0., 0., 1.));
         assert_eq!(vector!(0., 0., 1.), n);
     }
 
     #[test]
     fn sphere_normal_nonaxial() {
+        let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.));
+        let n = s.normal_at(
+            &arena,
+            point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.),
+        );
         assert_eq!(
             vector!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.),
             n
@@ -168,24 +175,30 @@ mod tests {
 
     #[test]
     fn sphere_normal_is_normalized_vector() {
+        let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.));
+        let n = s.normal_at(
+            &arena,
+            point!(3f64.sqrt() / 3., 3f64.sqrt() / 3., 3f64.sqrt() / 3.),
+        );
         assert_eq!(n.normalize(), n);
     }
 
     #[test]
     fn sphere_normal_translated() {
+        let arena = Arena::new();
         let mut s = sphere!();
         s.set_transform(Matrix::translation(0., 1., 0.));
-        let n = s.normal_at(point!(0., 1.70711, -0.70711));
+        let n = s.normal_at(&arena, point!(0., 1.70711, -0.70711));
         assert_eq!(vector!(0., 0.70711, -0.70711), n);
     }
 
     #[test]
     fn sphere_normal_transformed() {
+        let arena = Arena::new();
         let mut s = sphere!();
         s.set_transform(Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(PI / 5.));
-        let n = s.normal_at(point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
+        let n = s.normal_at(&arena, point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
         assert_eq!(vector!(0., 0.97014, -0.24254), n);
     }
 

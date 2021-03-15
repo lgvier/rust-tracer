@@ -20,12 +20,16 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(light: PointLight, arena: Arena, object_ids: Vec<usize>) -> Self {
-        Self {
+    pub fn new(light: PointLight, arena: Arena, objects: Vec<Shape>) -> Self {
+        let mut w = Self {
             light,
             arena,
-            object_ids,
+            object_ids: Vec::new(),
+        };
+        for object in objects {
+            w.add_object(object);
         }
+        w
     }
 
     pub fn object_by_index(&self, index: usize) -> &Shape {
@@ -55,7 +59,7 @@ impl World {
 
         match xs.iter().find(|i| i.t >= 0.) {
             Some(i) => {
-                let comps = i.prepare_computations(&r, &xs_refs[..]);
+                let comps = i.prepare_computations(&self.arena, &r, &xs_refs[..]);
                 self.shade_hit(&comps, remaining)
             }
             None => BLACK,
@@ -153,7 +157,6 @@ impl World {
 impl Default for World {
     fn default() -> Self {
         let light = PointLight::new(point!(-10., 10., -10.), WHITE);
-        let mut arena = Arena::new();
 
         let mut s1 = sphere!();
         let s1_material = MaterialBuilder::default()
@@ -167,8 +170,7 @@ impl Default for World {
         let mut s2 = sphere!();
         s2.set_transform(Matrix::scaling(0.5, 0.5, 0.5));
 
-        let object_ids = vec![arena.add(s1), arena.add(s2)];
-        World::new(light, arena, object_ids)
+        World::new(light, Arena::new(), vec![s1, s2])
     }
 }
 
@@ -203,7 +205,7 @@ mod tests {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let s = &w.object_by_index(0);
         let i = Intersection::new(4., s);
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), c);
     }
@@ -273,12 +275,11 @@ mod tests {
         let s1 = sphere!();
         let mut s2 = sphere!();
         s2.set_transform(Matrix::translation(0., 0., 10.));
-        let object_ids = vec![arena.add(s1), arena.add(s2)];
-        let w = World::new(light, arena, object_ids);
+        let w = World::new(light, arena, vec![s1, s2]);
 
         let r = ray!(point!(0., 0., 5.), vector!(0., 0., 1.));
         let i = Intersection::new(4., &w.object_by_index(1));
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.1, 0.1, 0.1), c);
     }
@@ -296,7 +297,7 @@ mod tests {
 
         let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
         let i = Intersection::new(1., &w.object_by_index(1));
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(BLACK, color);
     }
@@ -316,7 +317,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.last_object().unwrap());
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let color = w.reflected_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.19033, 0.23791, 0.14274), color);
     }
@@ -335,7 +336,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.last_object().unwrap());
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.87676, 0.92434, 0.82917), c);
     }
@@ -343,15 +344,13 @@ mod tests {
     #[test]
     fn color_at_with_mutually_reflective_surfaces_doesnt_cause_infinite_recursion() {
         let light = PointLight::new(point!(0., 0., 0.), WHITE);
-        let mut arena = Arena::new();
         let mut lower = plane!();
         lower.set_material(MaterialBuilder::default().reflective(1.).build().unwrap());
         lower.set_transform(Matrix::translation(0., -1., 0.));
         let mut upper = plane!();
         upper.set_material(MaterialBuilder::default().reflective(1.).build().unwrap());
         upper.set_transform(Matrix::translation(0., 1., 0.));
-        let object_ids = vec![arena.add(lower), arena.add(upper)];
-        let w = World::new(light, arena, object_ids);
+        let w = World::new(light, Arena::new(), vec![lower, upper]);
         let r = ray!(point!(0., 0., 0.), vector!(0., 1., 0.));
         w.color_at(&r); // should terminate succesfully
     }
@@ -371,7 +370,7 @@ mod tests {
             vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &w.last_object().unwrap());
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let color = w.reflected_color(&comps, 0);
         assert_eq!(BLACK, color);
     }
@@ -383,7 +382,7 @@ mod tests {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let i1 = Intersection::new(4., s);
         let i2 = Intersection::new(6., s);
-        let comps = i1.prepare_computations(&r, &[&i1, &i2]);
+        let comps = i1.prepare_computations(&w.arena, &r, &[&i1, &i2]);
         let c = w.refracted_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(BLACK, c);
     }
@@ -403,7 +402,7 @@ mod tests {
         let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
         let i1 = Intersection::new(4., s);
         let i2 = Intersection::new(6., s);
-        let comps = i1.prepare_computations(&r, &[&i1, &i2]);
+        let comps = i1.prepare_computations(&w.arena, &r, &[&i1, &i2]);
         let c = w.refracted_color(&comps, 0);
         assert_eq!(BLACK, c);
     }
@@ -425,7 +424,7 @@ mod tests {
         let i2 = Intersection::new(2f64.sqrt() / 2., s);
         // NOTE: this time you're inside the sphere, so you need​
         // to look at the second intersection
-        let comps = i2.prepare_computations(&r, &[&i1, &i2]);
+        let comps = i2.prepare_computations(&w.arena, &r, &[&i1, &i2]);
         let c = w.refracted_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(BLACK, c);
     }
@@ -456,7 +455,7 @@ mod tests {
         let i2 = Intersection::new(-0.4899, &w.object_by_index(1));
         let i3 = Intersection::new(0.4899, &w.object_by_index(1));
         let i4 = Intersection::new(0.9899, &w.object_by_index(0));
-        let comps = i3.prepare_computations(&r, &[&i1, &i2, &i3, &i4]);
+        let comps = i3.prepare_computations(&w.arena, &r, &[&i1, &i2, &i3, &i4]);
         let c = w.refracted_color(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0., 0.99887, 0.04722), c);
     }
@@ -495,7 +494,7 @@ mod tests {
             2f64.sqrt(),
             &w.object_by_index(w.object_ids.len() - 2), /* floor */
         );
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.93642, 0.68642, 0.68642), c);
     }
@@ -535,7 +534,7 @@ mod tests {
             2f64.sqrt(),
             &w.object_by_index(w.object_ids.len() - 2), /* floor */
         );
-        let comps = i.prepare_computations(&r, &[&i]);
+        let comps = i.prepare_computations(&w.arena, &r, &[&i]);
         let c = w.shade_hit(&comps, MAX_REFLECTION_RECURSION);
         assert_eq!(color!(0.93391, 0.69643, 0.69243), c);
     }
