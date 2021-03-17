@@ -1,4 +1,5 @@
 use crate::{
+    bounds::BoundingBox,
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
     point,
@@ -42,6 +43,10 @@ impl Sphere {
     pub fn local_normal_at(&self, local_point: Tuple) -> Tuple {
         local_point - point!()
     }
+
+    pub fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point!(-1, -1, -1), point!(1, 1, 1))
+    }
 }
 
 #[cfg(test)]
@@ -55,7 +60,7 @@ mod tests {
     #[test]
     fn sphere_ray_intersects_at_two_pts() {
         let arena = Arena::new();
-        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let r = ray!(0, 0, -5; 0, 0, 1);
         let s = sphere!();
         let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
@@ -66,7 +71,7 @@ mod tests {
     #[test]
     fn sphere_ray_intersects_tangent() {
         let arena = Arena::new();
-        let r = ray!(0., 1., -5.; 0., 0., 1.);
+        let r = ray!(0, 1, -5; 0, 0, 1);
         let s = sphere!();
         let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
@@ -77,7 +82,7 @@ mod tests {
     #[test]
     fn sphere_ray_misses() {
         let arena = Arena::new();
-        let r = ray!(0., 2., -5.; 0., 0., 1.);
+        let r = ray!(0, 2, -5; 0, 0, 1);
         let s = sphere!();
         let xs = s.intersect(&arena, &r);
         assert!(xs.is_empty());
@@ -86,7 +91,7 @@ mod tests {
     #[test]
     fn sphere_ray_within() {
         let arena = Arena::new();
-        let r = ray!(0., 0., 0.; 0., 0., 1.);
+        let r = ray!(0, 0, 0; 0, 0, 1);
         let s = sphere!();
         let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
@@ -97,7 +102,7 @@ mod tests {
     #[test]
     fn sphere_ray_behind() {
         let arena = Arena::new();
-        let r = ray!(0., 0., 5.; 0., 0., 1.);
+        let r = ray!(0, 0, 5; 0, 0, 1);
         let s = sphere!();
         let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
@@ -108,7 +113,7 @@ mod tests {
     #[test]
     fn sphere_set_transform() {
         let mut s = Sphere::new();
-        let t = Matrix::translation(2., 3., 4.);
+        let t = Matrix::translation(2, 3, 4);
         s.transform = t;
         assert_eq!(t, s.transform);
     }
@@ -116,9 +121,9 @@ mod tests {
     #[test]
     fn sphere_set_transform_scaled_intersect() {
         let arena = Arena::new();
-        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let r = ray!(0, 0, -5; 0, 0, 1);
         let mut s = sphere!();
-        s.set_transform(Matrix::scaling(2., 2., 2.));
+        s.set_transform(Matrix::scaling(2, 2, 2));
         let xs = s.intersect(&arena, &r);
         assert_eq!(2, xs.len());
         assert_eq!(3., xs[0].t);
@@ -128,9 +133,9 @@ mod tests {
     #[test]
     fn sphere_set_transform_translated_intersect() {
         let arena = Arena::new();
-        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let r = ray!(0, 0, -5; 0, 0, 1);
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(5., 0., 0.));
+        s.set_transform(Matrix::translation(5, 0, 0));
         let xs = s.intersect(&arena, &r);
         assert!(xs.is_empty());
     }
@@ -139,24 +144,24 @@ mod tests {
     fn sphere_normal_x_axis() {
         let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(&arena, point!(1., 0., 0.));
-        assert_eq!(vector!(1., 0., 0.), n);
+        let n = s.normal_at(&arena, point!(1, 0, 0));
+        assert_eq!(vector!(1, 0, 0), n);
     }
 
     #[test]
     fn sphere_normal_y_axis() {
         let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(&arena, point!(0., 1., 0.));
-        assert_eq!(vector!(0., 1., 0.), n);
+        let n = s.normal_at(&arena, point!(0, 1, 0));
+        assert_eq!(vector!(0, 1, 0), n);
     }
 
     #[test]
     fn sphere_normal_z_axis() {
         let arena = Arena::new();
         let s = sphere!();
-        let n = s.normal_at(&arena, point!(0., 0., 1.));
-        assert_eq!(vector!(0., 0., 1.), n);
+        let n = s.normal_at(&arena, point!(0, 0, 1));
+        assert_eq!(vector!(0, 0, 1), n);
     }
 
     #[test]
@@ -188,18 +193,18 @@ mod tests {
     fn sphere_normal_translated() {
         let arena = Arena::new();
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(0., 1., 0.));
-        let n = s.normal_at(&arena, point!(0., 1.70711, -0.70711));
-        assert_eq!(vector!(0., 0.70711, -0.70711), n);
+        s.set_transform(Matrix::translation(0, 1, 0));
+        let n = s.normal_at(&arena, point!(0, 1.70711, -0.70711));
+        assert_eq!(vector!(0, 0.70711, -0.70711), n);
     }
 
     #[test]
     fn sphere_normal_transformed() {
         let arena = Arena::new();
         let mut s = sphere!();
-        s.set_transform(Matrix::scaling(1., 0.5, 1.) * Matrix::rotation_z(PI / 5.));
-        let n = s.normal_at(&arena, point!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
-        assert_eq!(vector!(0., 0.97014, -0.24254), n);
+        s.set_transform(Matrix::scaling(1, 0.5, 1) * Matrix::rotation_z(PI / 5.));
+        let n = s.normal_at(&arena, point!(0, 2f64.sqrt() / 2., -2f64.sqrt() / 2.));
+        assert_eq!(vector!(0, 0.97014, -0.24254), n);
     }
 
     #[test]
@@ -211,7 +216,7 @@ mod tests {
     #[test]
     fn sphere_set_material() {
         let mut s = sphere!();
-        s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
+        s.set_material(MaterialBuilder::default().ambient(1).build().unwrap());
         assert_eq!(1., s.material().ambient);
     }
 }

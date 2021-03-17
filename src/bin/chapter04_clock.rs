@@ -11,7 +11,7 @@ fn main() -> std::io::Result<()> {
     let size = 500;
     let center = 250f64;
     let radius = 220f64;
-    let twelve = point!(0., 0., 1.);
+    let twelve = point!(0, 0, 1);
 
     let folder = "/tmp/04_clock";
     create_dir_all(folder)?;

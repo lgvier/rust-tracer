@@ -6,7 +6,7 @@ use crate::{approx_eq, matrix::Matrix};
 #[macro_export]
 macro_rules! point {
     () => {
-        $crate::tuple::Tuple::point(0., 0., 0.)
+        $crate::tuple::Tuple::point(0, 0, 0)
     };
     ($x:expr, $y:expr, $z:expr) => {
         $crate::tuple::Tuple::point($x, $y, $z)
@@ -15,7 +15,7 @@ macro_rules! point {
 #[macro_export]
 macro_rules! vector {
     () => {
-        $crate::tuple::Tuple::vector(0., 0., 0.)
+        $crate::tuple::Tuple::vector(0, 0, 0)
     };
     ($x:expr, $y:expr, $z:expr) => {
         $crate::tuple::Tuple::vector($x, $y, $z)
@@ -31,14 +31,19 @@ pub struct Tuple {
 }
 
 impl Tuple {
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
-        Self { x, y, z, w }
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>, w: impl Into<f64>) -> Self {
+        Self {
+            x: x.into(),
+            y: y.into(),
+            z: z.into(),
+            w: w.into(),
+        }
     }
-    pub fn point(x: f64, y: f64, z: f64) -> Self {
-        Self::new(x, y, z, 1.)
+    pub fn point(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
+        Self::new(x.into(), y.into(), z.into(), 1)
     }
-    pub fn vector(x: f64, y: f64, z: f64) -> Self {
-        Self::new(x, y, z, 0.)
+    pub fn vector(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
+        Self::new(x.into(), y.into(), z.into(), 0)
     }
     pub fn is_point(&self) -> bool {
         self.w == 1.
@@ -175,7 +180,7 @@ mod tests {
 
     #[test]
     fn is_point() {
-        let p = Tuple::new(4.3, -4.2, 3.1, 1.);
+        let p = Tuple::new(4.3, -4.2, 3.1, 1);
 
         assert_eq!(4.3, p.x);
         assert_eq!(-4.2, p.y);
@@ -197,7 +202,7 @@ mod tests {
 
     #[test]
     fn is_vector() {
-        let v = Tuple::new(4.3, -4.2, 3.1, 0.);
+        let v = Tuple::new(4.3, -4.2, 3.1, 0);
 
         assert_eq!(4.3, v.x);
         assert_eq!(-4.2, v.y);
@@ -231,83 +236,83 @@ mod tests {
 
     #[test]
     fn add() {
-        let p = point!(1., 2., 3.);
-        let v = vector!(1., 2., 3.);
+        let p = point!(1, 2, 3);
+        let v = vector!(1, 2, 3);
         let result = p + v;
-        assert_eq!(point!(2., 4., 6.), result);
+        assert_eq!(point!(2, 4, 6), result);
     }
 
     #[test]
     fn sub() {
-        let p = point!(1., 2., 3.);
-        let p2 = point!(1., 2., 3.);
+        let p = point!(1, 2, 3);
+        let p2 = point!(1, 2, 3);
         let result = p - p2;
-        assert_eq!(vector!(0., 0., 0.), result);
+        assert_eq!(vector!(0, 0, 0), result);
     }
     #[test]
     fn neg() {
-        let t = point!(1., 2., 3.);
+        let t = point!(1, 2, 3);
         let result = -t;
-        assert_eq!(Tuple::new(-1., -2., -3., -1.), result);
+        assert_eq!(Tuple::new(-1, -2, -3, -1), result);
     }
 
     #[test]
     fn mul() {
-        let v = vector!(1., 2., 3.);
+        let v = vector!(1, 2, 3);
         let result = v * 2.;
-        assert_eq!(vector!(2., 4., 6.), result);
+        assert_eq!(vector!(2, 4, 6), result);
     }
     #[test]
     fn div() {
-        let v = vector!(1., 2., 3.);
+        let v = vector!(1, 2, 3);
         let result = v / 2.;
-        assert_eq!(vector!(0.5, 1., 1.5), result);
+        assert_eq!(vector!(0.5, 1, 1.5), result);
     }
     #[test]
     fn magnitude() {
-        let v = vector!(1., 0., 0.);
+        let v = vector!(1, 0, 0);
         assert_eq!(1., v.magnitude());
-        let v = vector!(1., 2., 3.);
+        let v = vector!(1, 2, 3);
         assert_eq!(14_f64.sqrt(), v.magnitude());
     }
 
     #[test]
     fn normalize() {
-        let v = vector!(4., 0., 0.);
-        assert_eq!(vector!(1., 0., 0.), v.normalize());
-        let v = vector!(1., 2., 3.);
+        let v = vector!(4, 0, 0);
+        assert_eq!(vector!(1, 0, 0), v.normalize());
+        let v = vector!(1, 2, 3);
         assert_eq!(vector!(0.26726, 0.53452, 0.80178), v.normalize());
         assert_eq!(1., v.normalize().magnitude());
     }
 
     #[test]
     fn dot_product() {
-        let v = vector!(1., 2., 3.);
-        let v2 = vector!(2., 3., 4.);
+        let v = vector!(1, 2, 3);
+        let v2 = vector!(2, 3, 4);
         assert_eq!(20., v.dot(&v2));
     }
 
     #[test]
     fn cross_product() {
-        let v = vector!(1., 2., 3.);
-        let v2 = vector!(2., 3., 4.);
-        assert_eq!(vector!(-1., 2., -1.), v.cross(&v2));
-        assert_eq!(vector!(1., -2., 1.), v2.cross(&v));
+        let v = vector!(1, 2, 3);
+        let v2 = vector!(2, 3, 4);
+        assert_eq!(vector!(-1, 2, -1), v.cross(&v2));
+        assert_eq!(vector!(1, -2, 1), v2.cross(&v));
     }
 
     #[test]
     fn reflecting_vector_approaching_at_45_deg() {
-        let v = vector!(1., -1., 0.);
-        let n = vector!(0., 1., 0.);
+        let v = vector!(1, -1, 0);
+        let n = vector!(0, 1, 0);
         let r = v.reflect(n);
-        assert_eq!(vector!(1., 1., 0.), r);
+        assert_eq!(vector!(1, 1, 0), r);
     }
 
     #[test]
     fn reflecting_vector_off_slanted_surface() {
-        let v = vector!(0., -1., 0.);
-        let n = vector!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0.);
+        let v = vector!(0, -1, 0);
+        let n = vector!(2f64.sqrt() / 2., 2f64.sqrt() / 2., 0);
         let r = v.reflect(n);
-        assert_eq!(vector!(1., 0., 0.), r);
+        assert_eq!(vector!(1, 0, 0), r);
     }
 }

@@ -66,8 +66,8 @@ impl Camera {
         // and then compute the ray's direction
         // remember that the canvas is at z = -1
         let transform_inverse = self.transform.inverse().unwrap();
-        let pixel = transform_inverse * point!(world_x, world_y, -1.);
-        let origin = transform_inverse * point!(0., 0., 0.);
+        let pixel = transform_inverse * point!(world_x, world_y, -1);
+        let origin = transform_inverse * point!(0, 0, 0);
         let direction = (pixel - origin).normalize();
         ray!(origin, direction)
     }
@@ -151,37 +151,34 @@ mod tests {
     fn ray_trough_center_of_canvas() {
         let c = Camera::new(201, 101, PI / 2.);
         let r = c.ray_for_pixel(100, 50);
-        assert_eq!(point!(0., 0., 0.), r.origin);
-        assert_eq!(vector!(0., 0., -1.), r.direction);
+        assert_eq!(point!(0, 0, 0), r.origin);
+        assert_eq!(vector!(0, 0, -1), r.direction);
     }
 
     #[test]
     fn ray_trough_corner_of_canvas() {
         let c = Camera::new(201, 101, PI / 2.);
         let r = c.ray_for_pixel(0, 0);
-        assert_eq!(point!(0., 0., 0.), r.origin);
+        assert_eq!(point!(0, 0, 0), r.origin);
         assert_eq!(vector!(0.66519, 0.33259, -0.66851), r.direction);
     }
 
     #[test]
     fn ray_when_camera_is_transformed() {
         let mut c = Camera::new(201, 101, PI / 2.);
-        c.set_transform(Matrix::rotation_y(PI / 4.) * Matrix::translation(0., -2., 5.));
+        c.set_transform(Matrix::rotation_y(PI / 4.) * Matrix::translation(0, -2, 5));
         let r = c.ray_for_pixel(100, 50);
-        assert_eq!(point!(0., 2., -5.), r.origin);
-        assert_eq!(
-            vector!(2f64.sqrt() / 2., 0., -2f64.sqrt() / 2.),
-            r.direction
-        );
+        assert_eq!(point!(0, 2, -5), r.origin);
+        assert_eq!(vector!(2f64.sqrt() / 2., 0, -2f64.sqrt() / 2.), r.direction);
     }
 
     #[test]
     fn render_world_with_a_camera() {
         let w = World::default();
         let mut c = Camera::new(11, 11, PI / 2.);
-        let from = point!(0., 0., -5.);
-        let to = point!(0., 0., 0.);
-        let up = point!(0., 1., 0.);
+        let from = point!(0, 0, -5);
+        let to = point!(0, 0, 0);
+        let up = point!(0, 1, 0);
         c.set_transform(Matrix::view_transform(from, to, up));
         let image = c.render(&w, false);
         assert_eq!(color!(0.38066, 0.47583, 0.2855), image.pixel_at(5, 5));

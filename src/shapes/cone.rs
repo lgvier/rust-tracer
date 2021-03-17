@@ -1,8 +1,10 @@
 use std::mem;
 
 use crate::{
+    bounds::BoundingBox,
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
+    point,
     ray::Ray,
     tuple::Tuple,
     vector, EPSILON,
@@ -30,10 +32,10 @@ impl Cone {
         }
     }
 
-    pub fn new_with_min_max(minimum: f64, maximum: f64) -> Self {
+    pub fn new_with_min_max(minimum: impl Into<f64>, maximum: impl Into<f64>) -> Self {
         Cone {
-            minimum,
-            maximum,
+            minimum: minimum.into(),
+            maximum: maximum.into(),
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
@@ -41,10 +43,14 @@ impl Cone {
         }
     }
 
-    pub fn new_with_min_max_closed(minimum: f64, maximum: f64, closed: bool) -> Self {
+    pub fn new_with_min_max_closed(
+        minimum: impl Into<f64>,
+        maximum: impl Into<f64>,
+        closed: bool,
+    ) -> Self {
         Cone {
-            minimum,
-            maximum,
+            minimum: minimum.into(),
+            maximum: maximum.into(),
             closed,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
@@ -121,6 +127,16 @@ impl Cone {
         let y = if local_point.y > 0.0 { -y } else { y };
         vector!(local_point.x, y, local_point.z)
     }
+
+    pub fn bounds(&self) -> BoundingBox {
+        let a = self.minimum.abs();
+        let b = self.maximum.abs();
+        let limit = a.max(b);
+        BoundingBox::new(
+            point!(-limit, self.minimum, -limit),
+            point!(limit, self.maximum, limit),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -154,20 +170,15 @@ mod tests {
                 direction
             );
         };
-        t(point!(0., 0., -5.), vector!(0., 0., 1.), 5., 5.);
-        t(point!(0., 0., -5.), vector!(1., 1., 1.), 8.66025, 8.66025);
-        t(
-            point!(1., 1., -5.),
-            vector!(-0.5, -1., 1.),
-            4.55006,
-            49.44994,
-        );
+        t(point!(0, 0, -5), vector!(0, 0, 1), 5., 5.);
+        t(point!(0, 0, -5), vector!(1, 1, 1), 8.66025, 8.66025);
+        t(point!(1, 1, -5), vector!(-0.5, -1, 1), 4.55006, 49.44994);
     }
 
     #[test]
     fn intersecting_ray_with_ray_parallel_to_halves() {
         let c = Cone::new();
-        let r = ray!(point!(0., 0., -1.), vector!(0., 1., 1.).normalize());
+        let r = ray!(point!(0, 0, -1), vector!(0, 1, 1).normalize());
         let xs = c.local_intersect(&r);
         assert_eq!(1, xs.len());
         assert!(approx_eq(0.35355, dbg!(xs[0])));
@@ -187,9 +198,9 @@ mod tests {
                 direction
             );
         };
-        t(point!(0., 0., -5.), vector!(0., 1., 0.), 0);
-        t(point!(0., 0., -0.25), vector!(0., 1., 1.), 2);
-        t(point!(0., 0., -0.25), vector!(0., 1., 0.), 4);
+        t(point!(0, 0, -5), vector!(0, 1, 0), 0);
+        t(point!(0, 0, -0.25), vector!(0, 1, 1), 2);
+        t(point!(0, 0, -0.25), vector!(0, 1, 0), 4);
     }
 
     #[test]
@@ -199,8 +210,25 @@ mod tests {
             let n = c.local_normal_at(point);
             assert_eq!(normal, n, "normal at {:?}", point);
         };
-        t(point!(0., 0., 0.), vector!(0., 0., 0.));
-        t(point!(1., 1., 1.), vector!(1., -2f64.sqrt(), 1.));
-        t(point!(-1., -1., 0.), vector!(-1., 1., 0.));
+        t(point!(0, 0, 0), vector!(0, 0, 0));
+        t(point!(1, 1, 1), vector!(1, -2f64.sqrt(), 1));
+        t(point!(-1, -1, 0), vector!(-1, 1, 0));
+    }
+
+    #[test]
+    fn bounds() {
+        let c = Cone::new();
+        assert_eq!(
+            BoundingBox::new(
+                point!(-f64::INFINITY, -f64::INFINITY, -f64::INFINITY),
+                point!(f64::INFINITY, f64::INFINITY, f64::INFINITY)
+            ),
+            c.bounds()
+        );
+        let c = Cone::new_with_min_max_closed(-5, 3, true);
+        assert_eq!(
+            BoundingBox::new(point!(-5, -5, -5), point!(5, 3, 5)),
+            c.bounds()
+        );
     }
 }

@@ -2,6 +2,7 @@
 extern crate derive_builder;
 
 pub mod arena;
+pub mod bounds;
 pub mod camera;
 pub mod canvas;
 pub mod color;
@@ -20,5 +21,5 @@ pub const MAX_REFLECTION_RECURSION: usize = 5;
 pub const EPSILON: f64 = 0.00001;
 
 pub fn approx_eq(a: f64, b: f64) -> bool {
-    (a - b).abs() < EPSILON
+    (a.is_infinite() && b.is_infinite() && a.signum() == b.signum()) || (a - b).abs() < EPSILON
 }

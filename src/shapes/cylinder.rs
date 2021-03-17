@@ -1,8 +1,10 @@
 use std::mem;
 
 use crate::{
+    bounds::BoundingBox,
     material::Material,
     matrix::{Matrix, IDENTITY_MATRIX},
+    point,
     ray::Ray,
     tuple::Tuple,
     vector, EPSILON,
@@ -30,10 +32,10 @@ impl Cylinder {
         }
     }
 
-    pub fn new_with_min_max(minimum: f64, maximum: f64) -> Self {
+    pub fn new_with_min_max(minimum: impl Into<f64>, maximum: impl Into<f64>) -> Self {
         Cylinder {
-            minimum,
-            maximum,
+            minimum: minimum.into(),
+            maximum: maximum.into(),
             closed: false,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
@@ -41,10 +43,14 @@ impl Cylinder {
         }
     }
 
-    pub fn new_with_min_max_closed(minimum: f64, maximum: f64, closed: bool) -> Self {
+    pub fn new_with_min_max_closed(
+        minimum: impl Into<f64>,
+        maximum: impl Into<f64>,
+        closed: bool,
+    ) -> Self {
         Cylinder {
-            minimum,
-            maximum,
+            minimum: minimum.into(),
+            maximum: maximum.into(),
             closed,
             transform: IDENTITY_MATRIX,
             material: Material::default(),
@@ -117,12 +123,16 @@ impl Cylinder {
         let dist = local_point.x.powi(2) + local_point.z.powi(2);
 
         if dist < 1. && local_point.y >= (self.maximum - EPSILON) {
-            vector!(0., 1., 0.)
+            vector!(0, 1, 0)
         } else if dist < 1. && local_point.y <= (self.minimum + EPSILON) {
-            vector!(0., -1., 0.)
+            vector!(0, -1, 0)
         } else {
-            vector!(local_point.x, 0., local_point.z)
+            vector!(local_point.x, 0, local_point.z)
         }
+    }
+
+    pub fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point!(-1, self.minimum, -1), point!(1, self.maximum, 1))
     }
 }
 
@@ -144,9 +154,9 @@ mod tests {
                 direction
             );
         };
-        t(point!(1., 0., 0.), vector!(0., 1., 0.));
-        t(point!(0., 0., 0.), vector!(0., 1., 0.));
-        t(point!(0., 0., -5.), vector!(1., 1., 1.));
+        t(point!(1, 0, 0), vector!(0, 1, 0));
+        t(point!(0, 0, 0), vector!(0, 1, 0));
+        t(point!(0, 0, -5), vector!(1, 1, 1));
     }
 
     #[test]
@@ -175,9 +185,9 @@ mod tests {
                 direction
             );
         };
-        t(point!(1., 0., -5.), vector!(0., 0., 1.), 5., 5.);
-        t(point!(0., 0., -5.), vector!(0., 0., 1.), 4., 6.);
-        t(point!(0.5, 0., -5.), vector!(0.1, 1., 1.), 6.80798, 7.08872);
+        t(point!(1, 0, -5), vector!(0, 0, 1), 5., 5.);
+        t(point!(0, 0, -5), vector!(0, 0, 1), 4., 6.);
+        t(point!(0.5, 0, -5), vector!(0.1, 1, 1), 6.80798, 7.08872);
     }
 
     #[test]
@@ -187,15 +197,15 @@ mod tests {
             let n = c.local_normal_at(point);
             assert_eq!(normal, n, "normal at {:?}", point);
         };
-        t(point!(1., 0., 0.), vector!(1., 0., 0.));
-        t(point!(0., 5., -1.), vector!(0., 0., -1.));
-        t(point!(0., -2., 1.), vector!(0., 0., 1.));
-        t(point!(-1., 1., 0.), vector!(-1., 0., 0.));
+        t(point!(1, 0, 0), vector!(1, 0, 0));
+        t(point!(0, 5, -1), vector!(0, 0, -1));
+        t(point!(0, -2, 1), vector!(0, 0, 1));
+        t(point!(-1, 1, 0), vector!(-1, 0, 0));
     }
 
     #[test]
     fn intersecting_constrained_cylinder() {
-        let c = Cylinder::new_with_min_max(1., 2.);
+        let c = Cylinder::new_with_min_max(1, 2);
         let t = |point: Tuple, direction: Tuple, count: usize| {
             let r = ray!(point, direction.normalize());
             let xs = c.local_intersect(&r);
@@ -207,17 +217,17 @@ mod tests {
                 direction
             );
         };
-        t(point!(0., 1.5, 0.), vector!(0.1, 1., 0.), 0);
-        t(point!(0., 3., -5.), vector!(0., 0., 1.), 0);
-        t(point!(0., 0., -5.), vector!(0., 0., 1.), 0);
-        t(point!(0., 2., -5.), vector!(0., 0., 1.), 0);
-        t(point!(0., 1., -5.), vector!(0., 0., 1.), 0);
-        t(point!(0., 1.5, -2.), vector!(0., 0., 1.), 2);
+        t(point!(0, 1.5, 0), vector!(0.1, 1, 0), 0);
+        t(point!(0, 3, -5), vector!(0, 0, 1), 0);
+        t(point!(0, 0, -5), vector!(0, 0, 1), 0);
+        t(point!(0, 2, -5), vector!(0, 0, 1), 0);
+        t(point!(0, 1, -5), vector!(0, 0, 1), 0);
+        t(point!(0, 1.5, -2), vector!(0, 0, 1), 2);
     }
 
     #[test]
     fn intersecting_caps_closed_cylinder() {
-        let c = Cylinder::new_with_min_max_closed(1., 2., true);
+        let c = Cylinder::new_with_min_max_closed(1, 2, true);
         let t = |point: Tuple, direction: Tuple, count: usize| {
             let r = ray!(point, direction.normalize());
             let xs = c.local_intersect(&r);
@@ -229,25 +239,39 @@ mod tests {
                 direction
             );
         };
-        t(point!(0., 3., 0.), vector!(0., -1., 0.), 2);
-        t(point!(0., 3., -2.), vector!(0., -1., 2.), 2);
-        t(point!(0., 4., -2.), vector!(0., -1., 1.), 2);
-        t(point!(0., 0., -2.), vector!(0., 1., 2.), 2);
-        t(point!(0., -1., -2.), vector!(0., 1., 1.), 2);
+        t(point!(0, 3, 0), vector!(0, -1, 0), 2);
+        t(point!(0, 3, -2), vector!(0, -1, 2), 2);
+        t(point!(0, 4, -2), vector!(0, -1, 1), 2);
+        t(point!(0, 0, -2), vector!(0, 1, 2), 2);
+        t(point!(0, -1, -2), vector!(0, 1, 1), 2);
     }
 
     #[test]
     fn normal_vector_on_cylinders_end_caps() {
-        let c = Cylinder::new_with_min_max_closed(1., 2., true);
+        let c = Cylinder::new_with_min_max_closed(1, 2, true);
         let t = |point: Tuple, normal: Tuple| {
             let n = c.local_normal_at(point);
             assert_eq!(normal, n, "normal at {:?}", point);
         };
-        t(point!(0., 1., 0.), vector!(0., -1., 0.));
-        t(point!(0.5, 1., 0.), vector!(0., -1., 0.));
-        t(point!(0., 1., 0.5), vector!(0., -1., 0.));
-        t(point!(0., 2., 0.), vector!(0., 1., 0.));
-        t(point!(0.5, 2., 0.), vector!(0., 1., 0.));
-        t(point!(0., 2., 0.5), vector!(0., 1., 0.));
+        t(point!(0, 1, 0), vector!(0, -1, 0));
+        t(point!(0.5, 1, 0), vector!(0, -1, 0));
+        t(point!(0, 1, 0.5), vector!(0, -1, 0));
+        t(point!(0, 2, 0), vector!(0, 1, 0));
+        t(point!(0.5, 2, 0), vector!(0, 1, 0));
+        t(point!(0, 2, 0.5), vector!(0, 1, 0));
+    }
+
+    #[test]
+    fn bounds() {
+        let c = Cylinder::new();
+        assert_eq!(
+            BoundingBox::new(point!(-1, -f64::INFINITY, -1), point!(1, f64::INFINITY, 1)),
+            c.bounds()
+        );
+        let c = Cylinder::new_with_min_max_closed(-5, 3, true);
+        assert_eq!(
+            BoundingBox::new(point!(-1, -5, -1), point!(1, 3, 1)),
+            c.bounds()
+        );
     }
 }

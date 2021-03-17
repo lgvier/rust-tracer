@@ -7,6 +7,7 @@ pub mod sphere;
 
 use crate::{
     arena::Arena,
+    bounds::BoundingBox,
     intersection::Intersection,
     material::Material,
     matrix::Matrix,
@@ -217,6 +218,21 @@ impl Shape {
         };
         parent_id.map(|id| arena.get(id))
     }
+
+    pub fn bounds<'a>(&'a self, arena: &'a Arena) -> BoundingBox {
+        match self {
+            Shape::Sphere(s) => s.bounds(),
+            Shape::Plane(p) => p.bounds(),
+            Shape::Cube(c) => c.bounds(),
+            Shape::Cylinder(c) => c.bounds(),
+            Shape::Cone(c) => c.bounds(),
+            Shape::Group(g) => g.bounds(arena),
+        }
+    }
+
+    pub fn parent_space_bounds<'a>(&'a self, arena: &'a Arena) -> BoundingBox {
+        self.bounds(arena).transform(*self.transform())
+    }
 }
 
 #[cfg(test)]
@@ -244,8 +260,8 @@ mod tests {
     #[test]
     fn shape_assign_transformation() {
         let mut s = test_shape();
-        s.set_transform(Matrix::translation(2., 3., 4.));
-        assert_eq!(&Matrix::translation(2., 3., 4.), s.transform());
+        s.set_transform(Matrix::translation(2, 3, 4));
+        assert_eq!(&Matrix::translation(2, 3, 4), s.transform());
     }
 
     #[test]
@@ -257,7 +273,7 @@ mod tests {
     #[test]
     fn shape_assign_material() {
         let mut s = test_shape();
-        s.set_material(MaterialBuilder::default().ambient(1.).build().unwrap());
+        s.set_material(MaterialBuilder::default().ambient(1).build().unwrap());
         assert_eq!(1., s.material().ambient);
     }
 
@@ -266,27 +282,25 @@ mod tests {
         let mut arena = Arena::new();
 
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(5., 0., 0.));
+        s.set_transform(Matrix::translation(5, 0, 0));
         let s_id = arena.add(s);
 
         let g2_id = arena.next_id();
         let mut g2_inner = Group::new(g2_id);
-        g2_inner.add_child(&mut arena, s_id);
+        g2_inner.add_child(s_id, &mut arena);
         let mut g2 = Shape::Group(g2_inner);
-        g2.set_transform(Matrix::scaling(2., 2., 2.));
+        g2.set_transform(Matrix::scaling(2, 2, 2));
         arena.add_with_id(g2_id, g2);
 
         let g1_id = arena.next_id();
         let mut g1_inner = Group::new(g1_id);
-        g1_inner.add_child(&mut arena, g2_id);
+        g1_inner.add_child(g2_id, &mut arena);
         let mut g1 = Shape::Group(g1_inner);
         g1.set_transform(Matrix::rotation_y(PI / 2.));
         arena.add_with_id(g1_id, g1);
 
-        let p = arena
-            .get(s_id)
-            .world_to_object(&arena, point!(-2., 0., -10.));
-        assert_eq!(point!(0., 0., -1.), p);
+        let p = arena.get(s_id).world_to_object(&arena, point!(-2, 0, -10));
+        assert_eq!(point!(0, 0, -1), p);
     }
 
     #[test]
@@ -294,19 +308,19 @@ mod tests {
         let mut arena = Arena::new();
 
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(5., 0., 0.));
+        s.set_transform(Matrix::translation(5, 0, 0));
         let s_id = arena.add(s);
 
         let g2_id = arena.next_id();
         let mut g2_inner = Group::new(g2_id);
-        g2_inner.add_child(&mut arena, s_id);
+        g2_inner.add_child(s_id, &mut arena);
         let mut g2 = Shape::Group(g2_inner);
-        g2.set_transform(Matrix::scaling(1., 2., 3.));
+        g2.set_transform(Matrix::scaling(1, 2, 3));
         arena.add_with_id(g2_id, g2);
 
         let g1_id = arena.next_id();
         let mut g1_inner = Group::new(g1_id);
-        g1_inner.add_child(&mut arena, g2_id);
+        g1_inner.add_child(g2_id, &mut arena);
         let mut g1 = Shape::Group(g1_inner);
         g1.set_transform(Matrix::rotation_y(PI / 2.));
         arena.add_with_id(g1_id, g1);
@@ -323,19 +337,19 @@ mod tests {
         let mut arena = Arena::new();
 
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(5., 0., 0.));
+        s.set_transform(Matrix::translation(5, 0, 0));
         let s_id = arena.add(s);
 
         let g2_id = arena.next_id();
         let mut g2_inner = Group::new(g2_id);
-        g2_inner.add_child(&mut arena, s_id);
+        g2_inner.add_child(s_id, &mut arena);
         let mut g2 = Shape::Group(g2_inner);
-        g2.set_transform(Matrix::scaling(1., 2., 3.));
+        g2.set_transform(Matrix::scaling(1, 2, 3));
         arena.add_with_id(g2_id, g2);
 
         let g1_id = arena.next_id();
         let mut g1_inner = Group::new(g1_id);
-        g1_inner.add_child(&mut arena, g2_id);
+        g1_inner.add_child(g2_id, &mut arena);
         let mut g1 = Shape::Group(g1_inner);
         g1.set_transform(Matrix::rotation_y(PI / 2.));
         arena.add_with_id(g1_id, g1);
@@ -344,5 +358,35 @@ mod tests {
             .get(s_id)
             .normal_at(&arena, point!(1.7321, 1.1547, -5.5774));
         assert_eq!(vector!(0.2857, 0.42854, -0.85716), n);
+    }
+
+    #[test]
+    fn querying_bounding_box_in_parents_space() {
+        let arena = Arena::new();
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(1, -3, 5) * Matrix::scaling(0.5, 2, 4));
+        let bbox = s.parent_space_bounds(&arena);
+        assert_eq!(point!(0.5, -5, 1), bbox.min, "min");
+        assert_eq!(point!(1.5, -1, 9), bbox.max, "max");
+    }
+
+    #[test]
+    fn group_has_bb_that_contains_its_children() {
+        let mut arena = Arena::new();
+
+        let mut s = sphere!();
+        s.set_transform(Matrix::translation(2, 5, -3) * Matrix::scaling(2, 2, 2));
+
+        let mut c = cylinder!(-2, 2, false);
+        c.set_transform(Matrix::translation(-4, -1, 4) * Matrix::scaling(0.5, 1, 0.5));
+
+        let gid = arena.next_id();
+        let mut g = Group::new(gid);
+        g.add_children(&[arena.add(s), arena.add(c)], &mut arena);
+        arena.add_with_id(gid, Shape::Group(g));
+
+        let bbox = arena.get(gid).bounds(&arena);
+        assert_eq!(point!(-4.5, -3, -5), bbox.min, "min");
+        assert_eq!(point!(4, 7, 4.5), bbox.max, "max");
     }
 }

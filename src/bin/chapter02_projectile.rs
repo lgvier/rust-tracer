@@ -22,12 +22,12 @@ fn tick(e: &Environment, p: &Projectile) -> Projectile {
 }
 fn main() -> std::io::Result<()> {
     let mut p = Projectile {
-        position: point!(0., 1., 0.),
-        velocity: vector!(1., 1.8, 0.).normalize() * 9.4,
+        position: point!(0, 1, 0),
+        velocity: vector!(1, 1.8, 0).normalize() * 9.4,
     };
     let e = Environment {
-        gravity: vector!(0., -0.1, 0.),
-        wind: vector!(0.01, 0., 0.),
+        gravity: vector!(0, -0.1, 0),
+        wind: vector!(0.01, 0, 0),
     };
     let mut c = Canvas::new(900, 550);
 

@@ -22,8 +22,11 @@ pub struct PreparedComputations<'a> {
 }
 
 impl Intersection<'_> {
-    pub fn new<'a>(t: f64, object: &'a Shape) -> Intersection<'a> {
-        Intersection { t, object }
+    pub fn new<'a>(t: impl Into<f64>, object: &'a Shape) -> Intersection<'a> {
+        Intersection {
+            t: t.into(),
+            object,
+        }
     }
 
     pub fn hit(xs: Vec<Intersection>) -> Option<Intersection> {
@@ -145,8 +148,8 @@ mod tests {
     #[test]
     fn hit_positive() {
         let s = sphere!();
-        let i1 = Intersection::new(1., &s);
-        let i2 = Intersection::new(2., &s);
+        let i1 = Intersection::new(1, &s);
+        let i2 = Intersection::new(2, &s);
 
         let i = Intersection::hit(vec![i2, i1]);
         assert_eq!(Some(i1), i);
@@ -155,8 +158,8 @@ mod tests {
     #[test]
     fn hit_negative() {
         let s = sphere!();
-        let i1 = Intersection::new(-1., &s);
-        let i2 = Intersection::new(2., &s);
+        let i1 = Intersection::new(-1, &s);
+        let i2 = Intersection::new(2, &s);
 
         let i = Intersection::hit(vec![i2, i1]);
         assert_eq!(Some(i2), i);
@@ -165,8 +168,8 @@ mod tests {
     #[test]
     fn hit_all_negative() {
         let s = sphere!();
-        let i1 = Intersection::new(-2., &s);
-        let i2 = Intersection::new(-1., &s);
+        let i1 = Intersection::new(-2, &s);
+        let i2 = Intersection::new(-1, &s);
 
         let i = Intersection::hit(vec![i2, i1]);
         assert_eq!(None, i);
@@ -174,10 +177,10 @@ mod tests {
     #[test]
     fn hit_lowest_non_negative() {
         let s = sphere!();
-        let i1 = Intersection::new(5., &s);
-        let i2 = Intersection::new(7., &s);
-        let i3 = Intersection::new(-3., &s);
-        let i4 = Intersection::new(2., &s);
+        let i1 = Intersection::new(5, &s);
+        let i2 = Intersection::new(7, &s);
+        let i3 = Intersection::new(-3, &s);
+        let i4 = Intersection::new(2, &s);
 
         let i = Intersection::hit(vec![i1, i2, i3, i4]);
         assert_eq!(Some(i4), i);
@@ -186,23 +189,23 @@ mod tests {
     #[test]
     fn precompute() {
         let arena = Arena::new();
-        let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
+        let r = ray!(point!(0, 0, -5), vector!(0, 0, 1));
         let s = sphere!();
-        let i = Intersection::new(4., &s);
+        let i = Intersection::new(4, &s);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
-        assert_eq!(point!(0., 0., -1.), comps.point);
-        assert_eq!(vector!(0., 0., -1.), comps.eyev);
-        assert_eq!(vector!(0., 0., -1.), comps.normalv);
+        assert_eq!(point!(0, 0, -1), comps.point);
+        assert_eq!(vector!(0, 0, -1), comps.eyev);
+        assert_eq!(vector!(0, 0, -1), comps.normalv);
     }
 
     #[test]
     fn outside() {
         let arena = Arena::new();
-        let r = ray!(point!(0., 0., -5.), vector!(0., 0., 1.));
+        let r = ray!(point!(0, 0, -5), vector!(0, 0, 1));
         let s = sphere!();
-        let i = Intersection::new(4., &s);
+        let i = Intersection::new(4, &s);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
@@ -212,25 +215,25 @@ mod tests {
     #[test]
     fn inside() {
         let arena = Arena::new();
-        let r = ray!(point!(0., 0., 0.), vector!(0., 0., 1.));
+        let r = ray!(point!(0, 0, 0), vector!(0, 0, 1));
         let s = sphere!();
-        let i = Intersection::new(1., &s);
+        let i = Intersection::new(1, &s);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(i.t, comps.t);
         assert!(i.object == comps.object);
-        assert_eq!(point!(0., 0., 1.), comps.point);
-        assert_eq!(vector!(0., 0., -1.), comps.eyev);
+        assert_eq!(point!(0, 0, 1), comps.point);
+        assert_eq!(vector!(0, 0, -1), comps.eyev);
         assert!(comps.inside);
-        assert_eq!(vector!(0., 0., -1.), comps.normalv);
+        assert_eq!(vector!(0, 0, -1), comps.normalv);
     }
 
     #[test]
     fn hit_should_offset_point() {
         let arena = Arena::new();
-        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let r = ray!(0, 0, -5; 0, 0, 1);
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(0., 0., 1.));
-        let i = Intersection::new(5., &s);
+        s.set_transform(Matrix::translation(0, 0, 1));
+        let i = Intersection::new(5, &s);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert!(comps.over_point.z < -EPSILON / 2.);
         assert!(comps.point.z > comps.over_point.z);
@@ -241,40 +244,40 @@ mod tests {
         let arena = Arena::new();
 
         let mut a = sphere!();
-        a.set_transform(Matrix::scaling(2., 2., 2.));
+        a.set_transform(Matrix::scaling(2, 2, 2));
         a.set_material(
             MaterialBuilder::default()
-                .transparency(1.)
+                .transparency(1)
                 .refractive_index(1.5)
                 .build()
                 .unwrap(),
         );
         let mut b = sphere!();
-        b.set_transform(Matrix::translation(0., 0., -0.25));
+        b.set_transform(Matrix::translation(0, 0, -0.25));
         b.set_material(
             MaterialBuilder::default()
-                .transparency(1.)
-                .refractive_index(2.)
+                .transparency(1)
+                .refractive_index(2)
                 .build()
                 .unwrap(),
         );
         let mut c = sphere!();
-        c.set_transform(Matrix::translation(0., 0., 0.25));
+        c.set_transform(Matrix::translation(0, 0, 0.25));
         c.set_material(
             MaterialBuilder::default()
-                .transparency(1.)
+                .transparency(1)
                 .refractive_index(2.5)
                 .build()
                 .unwrap(),
         );
-        let r = ray!(0., 0., -4.; 0., 0., 1.);
+        let r = ray!(0, 0, -4; 0, 0, 1);
         let xs = vec![
-            Intersection::new(2., &a),
+            Intersection::new(2, &a),
             Intersection::new(2.75, &b),
             Intersection::new(3.25, &c),
             Intersection::new(4.75, &b),
             Intersection::new(5.25, &c),
-            Intersection::new(6., &a),
+            Intersection::new(6, &a),
         ];
         let xs_refs = xs.iter().collect::<Vec<&Intersection>>();
 
@@ -302,10 +305,10 @@ mod tests {
     #[test]
     fn under_point_is_below_surface() {
         let arena = Arena::new();
-        let r = ray!(0., 0., -5.; 0., 0., 1.);
+        let r = ray!(0, 0, -5; 0, 0, 1);
         let mut s = sphere!();
-        s.set_transform(Matrix::translation(0., 0., 1.));
-        let i = Intersection::new(5., &s);
+        s.set_transform(Matrix::translation(0, 0, 1));
+        let i = Intersection::new(5, &s);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert!(comps.under_point.z > -EPSILON / 2.);
         assert!(comps.point.z < comps.under_point.z);
@@ -318,12 +321,12 @@ mod tests {
         shape.set_material(
             MaterialBuilder::default()
                 .pattern(solid!(BLACK))
-                .transparency(1.)
+                .transparency(1)
                 .refractive_index(1.5)
                 .build()
                 .unwrap(),
         );
-        let r = ray!(0., 0., 2f64.sqrt() / 2.; 0., 1., 0.);
+        let r = ray!(0, 0, 2f64.sqrt() / 2.; 0, 1, 0);
         let i1 = Intersection::new(-2f64.sqrt() / 2., &shape);
         let i2 = Intersection::new(2f64.sqrt() / 2., &shape);
         let comps = i2.prepare_computations(&arena, &r, &[&i1, &i2]);
@@ -338,14 +341,14 @@ mod tests {
         shape.set_material(
             MaterialBuilder::default()
                 .pattern(solid!(BLACK))
-                .transparency(1.)
+                .transparency(1)
                 .refractive_index(1.5)
                 .build()
                 .unwrap(),
         );
-        let r = ray!(0., 0., 0.; 0., 1., 0.);
-        let i1 = Intersection::new(-1., &shape);
-        let i2 = Intersection::new(1., &shape);
+        let r = ray!(0, 0, 0; 0, 1, 0);
+        let i1 = Intersection::new(-1, &shape);
+        let i2 = Intersection::new(1, &shape);
         let comps = i2.prepare_computations(&arena, &r, &[&i1, &i2]);
         let reflectance = comps.schlick();
         assert!(approx_eq(0.04, reflectance));
@@ -358,12 +361,12 @@ mod tests {
         shape.set_material(
             MaterialBuilder::default()
                 .pattern(solid!(BLACK))
-                .transparency(1.)
+                .transparency(1)
                 .refractive_index(1.5)
                 .build()
                 .unwrap(),
         );
-        let r = ray!(0., 0.99, -2.; 0., 0., 1.);
+        let r = ray!(0, 0.99, -2; 0, 0, 1);
         let i = Intersection::new(1.8589, &shape);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         let reflectance = comps.schlick();

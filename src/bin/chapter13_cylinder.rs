@@ -23,7 +23,7 @@ fn random_color() -> Color {
 
 fn main() -> std::io::Result<()> {
     let mut floor = plane!();
-    floor.set_transform(Matrix::scaling(10., 0.01, 10.));
+    floor.set_transform(Matrix::scaling(10, 0.01, 10));
     {
         let mut pattern = checkers_pattern!(BLACK, WHITE);
         pattern.set_transform(Matrix::scaling(0.05, 0.05, 0.05));
@@ -38,10 +38,10 @@ fn main() -> std::io::Result<()> {
 
     let mut left_wall = plane!();
     left_wall.set_transform(
-        Matrix::translation(0., 0., 5.)
+        Matrix::translation(0, 0, 5)
             * Matrix::rotation_y(-PI / 4.)
             * Matrix::rotation_x(PI / 2.)
-            * Matrix::scaling(10., 0.01, 10.),
+            * Matrix::scaling(10, 0.01, 10),
     );
     {
         let mut pattern = checkers_pattern!(random_color(), random_color());
@@ -52,10 +52,10 @@ fn main() -> std::io::Result<()> {
 
     let mut right_wall = plane!();
     right_wall.set_transform(
-        Matrix::translation(0., 0., 5.)
+        Matrix::translation(0, 0, 5)
             * Matrix::rotation_y(PI / 4.)
             * Matrix::rotation_x(PI / 2.)
-            * Matrix::scaling(10., 0.01, 10.),
+            * Matrix::scaling(10, 0.01, 10),
     );
     {
         let mut pattern = checkers_pattern!(random_color(), random_color());
@@ -66,10 +66,10 @@ fn main() -> std::io::Result<()> {
 
     let mut back_wall = plane!();
     back_wall.set_transform(
-        Matrix::translation(10., 0., -5.)
+        Matrix::translation(10, 0, -5)
             * Matrix::rotation_y(-PI / 4.)
             * Matrix::rotation_x(PI / 2.)
-            * Matrix::scaling(10., 0.01, 10.),
+            * Matrix::scaling(10, 0.01, 10),
     );
     {
         let mut pattern = ring_pattern!(random_color(), random_color());
@@ -78,8 +78,8 @@ fn main() -> std::io::Result<()> {
         back_wall.set_material(material);
     };
 
-    let mut left_obj = cylinder!(0., 1.);
-    left_obj.set_transform(Matrix::translation(-3., 1., 0.5) * Matrix::rotation_z(PI / 2.));
+    let mut left_obj = cylinder!(0, 1);
+    left_obj.set_transform(Matrix::translation(-3, 1, 0.5) * Matrix::rotation_z(PI / 2.));
     left_obj.set_material(
         MaterialBuilder::default()
             .ambient(0.01)
@@ -90,8 +90,8 @@ fn main() -> std::io::Result<()> {
             .unwrap(),
     );
 
-    let mut center_obj = cylinder!(0., 1., true);
-    center_obj.set_transform(Matrix::translation(0.0, 1., 0.) * Matrix::rotation_z(PI / 1.3));
+    let mut center_obj = cylinder!(0, 1, true);
+    center_obj.set_transform(Matrix::translation(0.0, 1, 0) * Matrix::rotation_z(PI / 1.3));
     center_obj.set_material(
         MaterialBuilder::default()
             .ambient(0.01)
@@ -103,7 +103,7 @@ fn main() -> std::io::Result<()> {
     );
 
     let mut right_obj = cylinder!();
-    right_obj.set_transform(Matrix::translation(1.1, 1., 2.));
+    right_obj.set_transform(Matrix::translation(1.1, 1, 2));
     right_obj.set_material(
         MaterialBuilder::default()
             .reflective(0.2)
@@ -115,7 +115,7 @@ fn main() -> std::io::Result<()> {
     );
 
     let mut right_obj2 = cone!(-0.5, 0.5, true);
-    right_obj2.set_transform(Matrix::translation(2.1, 0.5, 1.));
+    right_obj2.set_transform(Matrix::translation(2.1, 0.5, 1));
     right_obj2.set_material(
         MaterialBuilder::default()
             .reflective(0.2)
@@ -126,7 +126,7 @@ fn main() -> std::io::Result<()> {
             .unwrap(),
     );
 
-    let light_source = PointLight::new(point!(-10., 10., -10.), WHITE);
+    let light_source = PointLight::new(point!(-10, 10, -10), WHITE);
 
     let world = World::new(
         light_source,
@@ -138,9 +138,9 @@ fn main() -> std::io::Result<()> {
     let hsize = 800;
     let mut camera = Camera::new(hsize, hsize / 2, PI / 3.);
     camera.set_transform(Matrix::view_transform(
-        point!(3., 1.5, -5.),
-        point!(0., 1., 0.),
-        vector!(0., 1., 0.),
+        point!(3, 1.5, -5),
+        point!(0, 1, 0),
+        vector!(0, 1, 0),
     ));
 
     let canvas = camera.render(&world, true);

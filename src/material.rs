@@ -20,6 +20,7 @@ const DEFAULT_MATERIAL: Material = Material {
 
 #[derive(Copy, Clone, Debug, PartialEq, Builder)]
 #[builder(default)]
+#[builder(setter(into))]
 pub struct Material {
     pub pattern: Pattern,
     pub ambient: f64,
@@ -148,12 +149,12 @@ mod tests {
     #[test]
     fn lightning_eye_between_light_and_surface() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., 0., -1.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 0., -10.), WHITE);
+        let eyev = vector!(0, 0, -1);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 0, -10), WHITE);
 
         let result = material.lightning(&object, &light, position, eyev, normalv, false);
         assert_eq!(color!(1.9, 1.9, 1.9), result);
@@ -162,12 +163,12 @@ mod tests {
     #[test]
     fn lightning_eye_between_light_and_surface_eye_offset_45_deg() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., 2f64.sqrt() / 2., -2f64.sqrt() / 2.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 0., -10.), WHITE);
+        let eyev = vector!(0, 2f64.sqrt() / 2., -2f64.sqrt() / 2.);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 0, -10), WHITE);
 
         let result = material.lightning(&object, &light, position, eyev, normalv, false);
         assert_eq!(WHITE, result);
@@ -176,12 +177,12 @@ mod tests {
     #[test]
     fn lightning_eye_opposite_surface_light_offset_45_deg() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., 0., -1.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 10., -10.), WHITE);
+        let eyev = vector!(0, 0, -1);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 10, -10), WHITE);
 
         let result = material.lightning(&object, &light, position, eyev, normalv, false);
         assert_eq!(color!(0.7364, 0.7364, 0.7364), result);
@@ -190,12 +191,12 @@ mod tests {
     #[test]
     fn lightning_eye_in_path_of_reflecting_vector() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., -2f64.sqrt() / 2., -2f64.sqrt() / 2.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 10., -10.), WHITE);
+        let eyev = vector!(0, -2f64.sqrt() / 2., -2f64.sqrt() / 2.);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 10, -10), WHITE);
 
         let result = material.lightning(&object, &light, position, eyev, normalv, false);
         assert_eq!(color!(1.6364, 1.6364, 1.6364), result);
@@ -204,12 +205,12 @@ mod tests {
     #[test]
     fn lightning_light_behind_surface() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., 0., -1.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 0., 10.), WHITE);
+        let eyev = vector!(0, 0, -1);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 0, 10), WHITE);
 
         let result = material.lightning(&object, &light, position, eyev, normalv, false);
         assert_eq!(color!(0.1, 0.1, 0.1), result);
@@ -218,12 +219,12 @@ mod tests {
     #[test]
     fn lightning_with_surface_in_shadow() {
         let material = Material::default();
-        let position = point!(0., 0., 0.);
+        let position = point!(0, 0, 0);
         let object = sphere!();
 
-        let eyev = vector!(0., 0., -1.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 0., -10.), WHITE);
+        let eyev = vector!(0, 0, -1);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 0, -10), WHITE);
         let in_shadow = true;
 
         let result = material.lightning(&object, &light, position, eyev, normalv, in_shadow);
@@ -234,34 +235,20 @@ mod tests {
     fn lightning_with_pattern_applied() {
         let material = MaterialBuilder::default()
             .pattern(stripe_pattern!(WHITE, BLACK))
-            .ambient(1.)
-            .diffuse(0.)
-            .specular(0.)
+            .ambient(1)
+            .diffuse(0)
+            .specular(0)
             .build()
             .unwrap();
         let object = sphere!();
 
-        let eyev = vector!(0., 0., -1.);
-        let normalv = vector!(0., 0., -1.);
-        let light = PointLight::new(point!(0., 0., -10.), WHITE);
+        let eyev = vector!(0, 0, -1);
+        let normalv = vector!(0, 0, -1);
+        let light = PointLight::new(point!(0, 0, -10), WHITE);
         let in_shadow = false;
 
-        let c1 = material.lightning(
-            &object,
-            &light,
-            point!(0.9, 0., 0.),
-            eyev,
-            normalv,
-            in_shadow,
-        );
-        let c2 = material.lightning(
-            &object,
-            &light,
-            point!(1.1, 0., 0.),
-            eyev,
-            normalv,
-            in_shadow,
-        );
+        let c1 = material.lightning(&object, &light, point!(0.9, 0, 0), eyev, normalv, in_shadow);
+        let c2 = material.lightning(&object, &light, point!(1.1, 0, 0), eyev, normalv, in_shadow);
         assert_eq!(WHITE, c1);
         assert_eq!(BLACK, c2);
     }
@@ -271,13 +258,13 @@ mod tests {
         let arena = Arena::new();
         let shape = plane!();
         let r = ray!(
-            point!(0., 1., -1.),
-            vector!(0., -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
+            point!(0, 1, -1),
+            vector!(0, -2f64.sqrt() / 2., 2f64.sqrt() / 2.)
         );
         let i = Intersection::new(2f64.sqrt(), &shape);
         let comps = i.prepare_computations(&arena, &r, &[&i]);
         assert_eq!(
-            vector!(0., 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
+            vector!(0, 2f64.sqrt() / 2., 2f64.sqrt() / 2.),
             comps.reflectv
         )
     }
