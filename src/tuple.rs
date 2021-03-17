@@ -40,10 +40,10 @@ impl Tuple {
         }
     }
     pub fn point(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
-        Self::new(x.into(), y.into(), z.into(), 1)
+        Self::new(x, y, z, 1)
     }
     pub fn vector(x: impl Into<f64>, y: impl Into<f64>, z: impl Into<f64>) -> Self {
-        Self::new(x.into(), y.into(), z.into(), 0)
+        Self::new(x, y, z, 0)
     }
     pub fn is_point(&self) -> bool {
         self.w == 1.

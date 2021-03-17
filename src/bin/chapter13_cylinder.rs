@@ -91,7 +91,7 @@ fn main() -> std::io::Result<()> {
     );
 
     let mut center_obj = cylinder!(0, 1, true);
-    center_obj.set_transform(Matrix::translation(0.0, 1, 0) * Matrix::rotation_z(PI / 1.3));
+    center_obj.set_transform(Matrix::translation(0., 1, 0) * Matrix::rotation_z(PI / 1.3));
     center_obj.set_material(
         MaterialBuilder::default()
             .ambient(0.01)

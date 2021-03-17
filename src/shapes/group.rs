@@ -36,14 +36,18 @@ impl Group {
     }
 
     pub fn local_intersect<'a>(&self, arena: &'a Arena, local_ray: &Ray) -> Vec<Intersection<'a>> {
-        let mut result = self
-            .children_ids
-            .iter()
-            .map(|child_id| arena.get(*child_id))
-            .flat_map(|c| c.intersect(arena, local_ray))
-            .collect::<Vec<_>>();
-        Intersection::sort(&mut result);
-        result
+        if self.bounds(arena).intersects(&local_ray) {
+            let mut result = self
+                .children_ids
+                .iter()
+                .map(|child_id| arena.get(*child_id))
+                .flat_map(|c| c.intersect(arena, local_ray))
+                .collect::<Vec<_>>();
+            Intersection::sort(&mut result);
+            result
+        } else {
+            vec![]
+        }
     }
 
     pub fn bounds<'a>(&self, arena: &'a Arena) -> BoundingBox {
