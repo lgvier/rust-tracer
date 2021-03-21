@@ -80,6 +80,46 @@ impl BoundingBox {
             (tmin, tmax)
         }
     }
+
+    pub fn split(&self) -> (Self, Self) {
+        let dx = self.max.x - self.min.x;
+        let dy = self.max.y - self.min.y;
+        let dz = self.max.z - self.min.z;
+
+        let greatest = dx.max(dy.max(dz));
+
+        let Tuple {
+            x: mut x0,
+            y: mut y0,
+            z: mut z0,
+            ..
+        } = self.min;
+        let Tuple {
+            x: mut x1,
+            y: mut y1,
+            z: mut z1,
+            ..
+        } = self.max;
+
+        if greatest == dx {
+            x0 = x0 + dx / 2.0;
+            x1 = x0;
+        } else if greatest == dy {
+            y0 = y0 + dy / 2.0;
+            y1 = y0;
+        } else {
+            z0 = z0 + dz / 2.0;
+            z1 = z0;
+        }
+
+        let mid_min = point!(x0, y0, z0);
+        let mid_max = point!(x1, y1, z1);
+
+        (
+            BoundingBox::new(self.min, mid_max),
+            BoundingBox::new(mid_min, self.max),
+        )
+    }
 }
 
 impl Add<BoundingBox> for BoundingBox {
@@ -227,5 +267,45 @@ mod tests {
             let r = ray!(origin, direction.normalize());
             assert_eq!(expected, bb.intersects(&r));
         }
+    }
+
+    #[test]
+    fn split_perfect_cube() {
+        let bb = BoundingBox::new(point!(-1, -4, -5), point!(9, 6, 5));
+        let (left, right) = bb.split();
+        assert_eq!(point!(-1, -4, -5), left.min);
+        assert_eq!(point!(4, 6, 5), left.max);
+        assert_eq!(point!(4, -4, -5), right.min);
+        assert_eq!(point!(9, 6, 5), right.max);
+    }
+
+    #[test]
+    fn split_x_wide_box() {
+        let bb = BoundingBox::new(point!(-1, -2, -3), point!(9, 5.5, 3));
+        let (left, right) = bb.split();
+        assert_eq!(point!(-1, -2, -3), left.min);
+        assert_eq!(point!(4, 5.5, 3), left.max);
+        assert_eq!(point!(4, -2, -3), right.min);
+        assert_eq!(point!(9, 5.5, 3), right.max);
+    }
+
+    #[test]
+    fn split_y_wide_box() {
+        let bb = BoundingBox::new(point!(-1, -2, -3), point!(5, 8, 3));
+        let (left, right) = bb.split();
+        assert_eq!(point!(-1, -2, -3), left.min);
+        assert_eq!(point!(5, 3, 3), left.max);
+        assert_eq!(point!(-1, 3, -3), right.min);
+        assert_eq!(point!(5, 8, 3), right.max);
+    }
+
+    #[test]
+    fn split_z_wide_box() {
+        let bb = BoundingBox::new(point!(-1, -2, -3), point!(5, 3, 7));
+        let (left, right) = bb.split();
+        assert_eq!(point!(-1, -2, -3), left.min);
+        assert_eq!(point!(5, 3, 2), left.max);
+        assert_eq!(point!(-1, -2, 2), right.min);
+        assert_eq!(point!(5, 3, 7), right.max);
     }
 }

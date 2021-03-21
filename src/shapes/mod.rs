@@ -233,6 +233,13 @@ impl Shape {
     pub fn parent_space_bounds<'a>(&'a self, arena: &'a Arena) -> BoundingBox {
         self.bounds(arena).transform(*self.transform())
     }
+
+    pub fn divide(&mut self, threshold: usize, arena: &mut Arena) {
+        match self {
+            Shape::Group(g) => g.divide(threshold, arena),
+            _ => (),
+        }
+    }
 }
 
 #[cfg(test)]

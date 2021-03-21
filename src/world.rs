@@ -44,6 +44,11 @@ impl World {
         self.object_ids.push(self.arena.add(object));
     }
 
+    pub fn add_object_with_id(&mut self, id: usize, object: Shape) {
+        self.arena.add_with_id(id, object);
+        self.object_ids.push(id);
+    }
+
     pub fn apply_changes_by_index(&mut self, index: usize, c: impl Fn(&mut Shape)) {
         let id = self.object_ids[index];
         self.arena.apply_changes(id, c);
